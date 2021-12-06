@@ -2,12 +2,11 @@
 //! To make a self-contained file for contest submission, dump each desired
 //! module's contents directly here instead of the use statements.
 //! Also, use the commented code in main() to employ standard I/O.
-extern crate contest_algorithms;
-use contest_algorithms::graph::Graph;
-use contest_algorithms::graph::Edge;
-use contest_algorithms::graph::InDegree;
-use contest_algorithms::range_query::{specs::AssignSum, StaticArq};
-use contest_algorithms::scanner::Scanner;
+use rustrithm::graph::Graph;
+use rustrithm::graph::Edge;
+use rustrithm::graph::AdjTo;
+use rustrithm::range_query::{specs::AssignSum, StaticArq};
+use rustrithm::scanner::Scanner;
 use std::io;
 
 const SAMPLE_INPUT: &[u8] = b"\
@@ -52,7 +51,7 @@ fn dfs(
     *time += 1;
     l[u] = *time;
 
-    for InDegree{v, ..} in graph.adj_list(u) {
+    for AdjTo{v, ..} in graph.adj_list(u) {
         if l[v] == 0 {
             p[v] = l[u];
             dfs(graph, v, l, r, p, time);

@@ -1,6 +1,6 @@
 //! Graph connectivity structures.
 use super::Graph;
-use super::InDegree;
+use super::AdjTo;
 use super::Edge;
 
 impl Graph<Edge> {
@@ -108,7 +108,7 @@ impl<'a> ConnectivityGraph<'a> {
     //  https://github.com/williamfiset/Algorithms/blob/86661d3daf3063eae2ea9329b069456b87490b62/src/main/java/com/williamfiset/algorithms/graphtheory/TarjanSccSolverAdjacencyList.java#L78
     fn scc(&mut self, data: &mut ConnectivityData, u: usize) {
         data.visit(u);
-        for &InDegree{v, ..} in &self.graph.adj_list(u) {
+        for &AdjTo{v, ..} in &self.graph.adj_list(u) {
             if data.vis[v] == 0 {
                 self.scc(data, v);
             }
@@ -153,7 +153,7 @@ impl<'a> ConnectivityGraph<'a> {
 
     fn bcc(&mut self, data: &mut ConnectivityData, u: usize, par: usize) {
         data.visit(u);
-        for &InDegree { idx:e, v } in &self.graph.adj_list(u) {
+        for &AdjTo { edge_id:e, v } in &self.graph.adj_list(u) {
             if data.vis[v] == 0 {
                 data.e_stack.push(e);
                 self.bcc(data, v, e);
@@ -193,7 +193,7 @@ impl<'a> ConnectivityGraph<'a> {
     pub fn is_cut_vertex(&self, u: usize) -> bool {
         let adj = self.graph.adj_list(u);
         if let Some(first_e) = adj.iter().next() {
-            adj.iter().skip(1).any(|&InDegree{idx:e, ..}| self.vcc[first_e.idx] != self.vcc[e])
+            adj.iter().skip(1).any(|&AdjTo{edge_id:e, ..}| self.vcc[first_e.edge_id] != self.vcc[e])
         } else {
             false
         }

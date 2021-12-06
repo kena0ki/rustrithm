@@ -1,16 +1,16 @@
 //! Maximum flows, matchings, and minimum cuts.
 use std::{collections::btree_set::IntoIter, iter::StepBy};
 
-use super::{Graph, InDegree,FlowEdge};
+use super::{Graph, AdjTo,FlowEdge};
 
 impl Graph<FlowEdge> {
     pub fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, rcap: i64, cost: i64) {
-        let idx = self.num_e();
+        let edge_id = self.num_e();
         // add an edge
-        self.adj.entry(u).or_default().insert(InDegree{ idx, v });
+        self.adj.entry(u).or_default().insert(AdjTo{ edge_id, v });
         self.edges.push(FlowEdge { u, v, cap, cost, flow:0 });
         // add a residual edge
-        self.adj.entry(v).or_default().insert(InDegree{ idx: idx+1, v:u });
+        self.adj.entry(v).or_default().insert(AdjTo{ edge_id: edge_id+1, v:u });
         self.edges.push(FlowEdge { v:u, u:v, cap:rcap, cost: -cost, flow:0 });
     }
 }
@@ -102,7 +102,7 @@ impl FlowGraph {
         self.distance[s] = 0;
         q.push_back(s);
         while let Some(u) = q.pop_front() {
-            for InDegree{idx:e, v} in self.graph.adj_list(u) {
+            for AdjTo{edge_id:e, v} in self.graph.adj_list(u) {
                 if self.distance[v] == Self::INF && self.graph.edges[e].flow < self.graph.edges[e].cap {
                     self.distance[v] = self.distance[u] + 1;
                     q.push_back(v);
@@ -117,14 +117,14 @@ impl FlowGraph {
         u: usize,
         t: usize,
         flow_input: i64,
-        adj: &mut [::std::iter::Peekable<IntoIter<InDegree>>],
+        adj: &mut [::std::iter::Peekable<IntoIter<AdjTo>>],
     ) -> i64 {
         if u == t {
             return flow_input;
         }
         let mut flow_used = 0;
 
-        while let Some(&InDegree{idx:e, v}) = adj[u].peek() {
+        while let Some(&AdjTo{edge_id:e, v}) = adj[u].peek() {
             let edge = &self.graph.edges[e];
             let rem_cap = (edge.cap - edge.flow).min(flow_input - flow_used);// min(remaining capacity, remaining flow)
             if rem_cap > 0 && self.distance[v] == self.distance[u] + 1 {
@@ -210,7 +210,7 @@ impl FlowGraph {
         {
             vis[u] = true;
             pot[u] = self.distance[u];
-            for InDegree{idx:e, v} in self.graph.adj_list(u) {
+            for AdjTo{edge_id:e, v} in self.graph.adj_list(u) {
                 let edge = &self.graph.edges[e];
                 if self.distance[v] > self.distance[u] + edge.cost && edge.flow < edge.cap {
                     self.distance[v] = self.distance[u] + edge.cost;

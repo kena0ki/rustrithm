@@ -4,7 +4,7 @@ use std::cmp::Reverse;
 
 use super::Graph;
 use super::Edge;
-use super::InDegree;
+use super::AdjTo;
 
 pub struct TopoGraph {
     indeg_cnt: HashMap<usize, usize>,
@@ -33,7 +33,7 @@ impl TopoGraph {
         let mut sorted_nodes = Vec::with_capacity(self.graph.num_v());
         while let Some(Reverse(i)) = heap.pop() {
             sorted_nodes.push(i);
-            for InDegree { v, .. } in self.graph.adj_list(i) {
+            for AdjTo { v, .. } in self.graph.adj_list(i) {
                 *self.indeg_cnt.get_mut(&v).unwrap()-=1;
                 if self.indeg_cnt[&v] == 0 {
                     heap.push(Reverse(v));

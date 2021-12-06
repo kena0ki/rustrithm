@@ -31,7 +31,7 @@ where
     /// Constuctor for the Casher
     /// # Examples
     /// ```
-    /// # use contest_algorithms::caching::Cacher;
+    /// # use rustrithm::caching::Cacher;
     /// let mut squared = Cacher::new(|n: u32| n*n);
     /// ```
     pub fn new(calculation: F) -> Cacher<F, U, V> {
@@ -46,7 +46,7 @@ where
     /// calls the function, stores the value, then returns the value.
     /// # Examples
     /// ```
-    /// # use contest_algorithms::caching::Cacher;
+    /// # use rustrithm::caching::Cacher;
     /// let mut squared = Cacher::new(|n: u32| n*n);
     ///
     /// // This is where we call the function

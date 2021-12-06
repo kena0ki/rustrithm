@@ -60,7 +60,7 @@ impl<'a, C: Eq> Matcher<'a, C> {
     /// # Example
     ///
     /// ```
-    /// use contest_algorithms::string_proc::Matcher;
+    /// use rustrithm::string_proc::Matcher;
     /// let byte_string: &[u8] = b"hello";
     /// let utf8_string: &str = "hello";
     /// let vec_char: Vec<char> = utf8_string.chars().collect();
@@ -326,7 +326,7 @@ pub fn palindromes(text: &[impl Eq]) -> Vec<usize> {
 /// # Example
 ///
 /// ```
-/// use contest_algorithms::string_proc::z_algorithm;
+/// use rustrithm::string_proc::z_algorithm;
 /// let z = z_algorithm(b"ababbababbabababbabababbababbaba");
 /// assert_eq!(
 ///     z,

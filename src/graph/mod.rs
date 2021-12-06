@@ -8,6 +8,7 @@ pub mod flow;
 pub mod grid;
 pub mod disjoint_set;
 pub mod topo;
+pub mod util;
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::cmp::Reverse;
@@ -35,16 +36,16 @@ pub struct FlowEdge {
 }
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
-pub struct InDegree {
-    pub idx: usize,
+pub struct AdjTo {
+    pub edge_id: usize,
     pub v: usize,
 }
-impl Ord for InDegree {
+impl Ord for AdjTo {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        return self.idx.cmp(&other.idx);
+        return self.edge_id.cmp(&other.edge_id);
     }
 }
-impl PartialOrd for InDegree {
+impl PartialOrd for AdjTo {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
@@ -53,7 +54,7 @@ impl PartialOrd for InDegree {
 /// A compact graph representation.
 #[derive(Debug,Default,Clone,PartialEq,Eq)]
 pub struct Graph<T> {
-    adj: HashMap<usize,BTreeSet<InDegree>>, // two edges for an undirected edge
+    adj: HashMap<usize,BTreeSet<AdjTo>>, // two edges for an undirected edge
     num_vert: usize,
     edges: Vec<T>, // one edge for an undirected edge
 }
@@ -81,18 +82,18 @@ impl <T:std::fmt::Debug> Graph<T> {
     }
 
     fn add_adj(&mut self, u: usize, v: usize) {
-        let idx = self.num_e();
-        self.adj.entry(u).or_default().insert(InDegree{ idx, v });
+        let edge_id = self.num_e();
+        self.adj.entry(u).or_default().insert(AdjTo{ edge_id, v });
     }
 
     fn add_undirected_adj(&mut self, u: usize, v: usize) {
-        let idx = self.num_e();
-        self.adj.entry(u).or_default().insert(InDegree{ idx, v });
-        self.adj.entry(v).or_default().insert(InDegree{ idx, v:u });
+        let edge_id = self.num_e();
+        self.adj.entry(u).or_default().insert(AdjTo{ edge_id, v });
+        self.adj.entry(v).or_default().insert(AdjTo{ edge_id, v:u });
     }
 
     /// Gets vertex u's adjacency list.
-    pub fn adj_list(&self, u: usize) -> BTreeSet<InDegree> {
+    pub fn adj_list(&self, u: usize) -> BTreeSet<AdjTo> {
         return self.adj.get(&u).unwrap_or(&BTreeSet::new()).to_owned();
     }
 
@@ -150,8 +151,8 @@ impl Graph<WeightedEdge> {
                 continue;
             }
             let deg = self.adj.get(&u).unwrap();
-            for &InDegree{idx, v} in deg.iter() {
-                let distance_v = distance_u + self.edges[idx].weight as usize;
+            for &AdjTo{edge_id, v} in deg.iter() {
+                let distance_v = distance_u + self.edges[edge_id].weight as usize;
                 if distance[v] > distance_v {
                     prev.insert(v,u);
                     distance[v] = distance_v;

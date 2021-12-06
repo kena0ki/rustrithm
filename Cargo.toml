@@ -1,15 +1,13 @@
 [package]
-name = "contest-algorithms"
-version = "0.3.0"
-authors = ["Aram Ebtekar"]
+name = "rustrithm"
+version = "0.1.0"
+authors = ["kena0ki"]
 edition = "2018"
 
 description = "Common algorithms and data structures for programming contests"
-repository = "https://github.com/EbTech/rust-algorithms"
+repository = "https://github.com/kena0ki/rustrithm"
 readme = "README.md"
 keywords = ["competitive", "programming", "codeforces"]
 categories = ["algorithms", "data-structures"]
 license = "MIT"
 
-[badges]
-travis-ci = { repository = "EbTech/rust-algorithms", branch = "master" }

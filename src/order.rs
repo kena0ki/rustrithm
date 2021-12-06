@@ -5,7 +5,7 @@
 /// # Example
 ///
 /// ```
-/// use contest_algorithms::order::asserting_cmp;
+/// use rustrithm::order::asserting_cmp;
 /// let mut vec = vec![4.5, -1.7, 1.2];
 /// vec.sort_unstable_by(asserting_cmp);
 /// assert_eq!(vec, vec![-1.7, 1.2, 4.5]);
