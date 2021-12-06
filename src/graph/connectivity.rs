@@ -1,5 +1,18 @@
 //! Graph connectivity structures.
 use super::Graph;
+use super::InDegree;
+use super::Edge;
+
+impl Graph<Edge> {
+    /// If we think of each even-numbered vertex as a variable, and its
+    /// odd-numbered successor as its negation, then we can build the
+    /// implication graph corresponding to any 2-CNF formula.
+    /// Note that u||v == !u -> v == !v -> u.
+    pub fn add_two_sat_clause(&mut self, u: usize, v: usize) {
+        self.add_edge(u ^ 1, v);
+        self.add_edge(v ^ 1, u);
+    }
+}
 
 /// Helper struct that carries data needed for the depth-first searches in
 /// ConnectivityGraph's constructor.
@@ -46,7 +59,7 @@ impl ConnectivityData {
 /// Multiple-edges and self-loops are correctly handled.
 pub struct ConnectivityGraph<'a> {
     /// Immutable graph, frozen for the lifetime of the ConnectivityGraph object.
-    pub graph: &'a Graph,
+    pub graph: &'a Graph<Edge>,
     /// ID of a vertex's CC, SCC or 2ECC, whichever applies. Range 1 to num_cc.
     pub cc: Vec<usize>,
     /// ID of an edge's 2VCC, where applicable. Ranges from 1 to num_vcc.
@@ -65,7 +78,7 @@ impl<'a> ConnectivityGraph<'a> {
     /// - is_directed == true on undirected graph: CCs
     /// - is_directed == false on undirected graph: 2ECCs and 2VCCs
     /// - is_directed == false on directed graph: undefined behavior
-    pub fn new(graph: &'a Graph, is_directed: bool) -> Self {
+    pub fn new(graph: &'a Graph<Edge>, is_directed: bool) -> Self {
         let mut connect = Self {
             graph,
             cc: vec![0; graph.num_v()],
@@ -86,9 +99,16 @@ impl<'a> ConnectivityGraph<'a> {
         connect
     }
 
+    // This is based on Tarjan's strongly connected components algorithm
+    // but slightly different about lowering.
+    // Original version use v.index but this method not.
+    //  https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+    // I think this logic comes from here.
+    //  https://www.youtube.com/watch?v=wUgWX0nc4NY
+    //  https://github.com/williamfiset/Algorithms/blob/86661d3daf3063eae2ea9329b069456b87490b62/src/main/java/com/williamfiset/algorithms/graphtheory/TarjanSccSolverAdjacencyList.java#L78
     fn scc(&mut self, data: &mut ConnectivityData, u: usize) {
         data.visit(u);
-        for (_, v) in self.graph.adj_list(u) {
+        for &InDegree{v, ..} in &self.graph.adj_list(u) {
             if data.vis[v] == 0 {
                 self.scc(data, v);
             }
@@ -133,30 +153,28 @@ impl<'a> ConnectivityGraph<'a> {
 
     fn bcc(&mut self, data: &mut ConnectivityData, u: usize, par: usize) {
         data.visit(u);
-        for (e, v) in self.graph.adj_list(u) {
+        for &InDegree { idx:e, v } in &self.graph.adj_list(u) {
             if data.vis[v] == 0 {
                 data.e_stack.push(e);
                 self.bcc(data, v, e);
                 data.lower(u, data.low[v]);
-                if data.vis[u] <= data.low[v] {
+                if data.vis[u] <= data.low[v] { // no back-edge in subtree
                     // u is a cut vertex unless it's a one-child root
                     self.num_vcc += 1;
                     while let Some(top_e) = data.e_stack.pop() {
                         self.vcc[top_e] = self.num_vcc;
-                        self.vcc[top_e ^ 1] = self.num_vcc;
-                        if e ^ top_e <= 1 {
+                        if e == top_e {
                             break;
                         }
                     }
                 }
-            } else if data.vis[v] < data.vis[u] && e ^ par != 1 {
+            } else if data.vis[v] < data.vis[u] && e != par { // found a back-edge and u is not parent of v.
                 data.lower(u, data.vis[v]);
                 data.e_stack.push(e);
             } else if v == u {
                 // e is a self-loop
                 self.num_vcc += 1;
                 self.vcc[e] = self.num_vcc;
-                self.vcc[e ^ 1] = self.num_vcc;
             }
         }
         if data.vis[u] == data.low[u] {
@@ -173,10 +191,9 @@ impl<'a> ConnectivityGraph<'a> {
 
     /// In an undirected graph, determines whether u is an articulation vertex.
     pub fn is_cut_vertex(&self, u: usize) -> bool {
-        if let Some(first_e) = self.graph.first[u] {
-            self.graph
-                .adj_list(u)
-                .any(|(e, _)| self.vcc[first_e] != self.vcc[e])
+        let adj = self.graph.adj_list(u);
+        if let Some(first_e) = adj.iter().next() {
+            adj.iter().skip(1).any(|&InDegree{idx:e, ..}| self.vcc[first_e.idx] != self.vcc[e])
         } else {
             false
         }
@@ -184,15 +201,33 @@ impl<'a> ConnectivityGraph<'a> {
 
     /// In an undirected graph, determines whether e is a bridge
     pub fn is_cut_edge(&self, e: usize) -> bool {
-        let u = self.graph.endp[e ^ 1];
-        let v = self.graph.endp[e];
-        self.cc[u] != self.cc[v]
+        if let Some(edge) = self.graph.edges.get(e) {
+            return self.cc[edge.u] != self.cc[edge.v];
+        }
+        return false;
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_scc() {
+        let mut graph = Graph::new(6, 7);
+        graph.add_edge(1,4);
+        graph.add_edge(5,2);
+        graph.add_edge(3,0);
+        graph.add_edge(5,5);
+        graph.add_edge(4,1);
+        graph.add_edge(0,3);
+        graph.add_edge(4,2);
+
+        assert_eq!(
+            ConnectivityGraph::new(&graph, true).cc,
+            vec![1, 3, 2, 1, 3, 4]
+        );
+    }
 
     #[test]
     fn test_toposort() {
@@ -228,7 +263,7 @@ mod test {
 
     #[test]
     fn test_biconnected() {
-        let mut graph = Graph::new(3, 6);
+        let mut graph = Graph::new(3, 3);
         graph.add_undirected_edge(0, 1);
         graph.add_undirected_edge(1, 2);
         graph.add_undirected_edge(1, 2);
@@ -241,7 +276,7 @@ mod test {
             .filter(|&u| cg.is_cut_vertex(u))
             .collect::<Vec<_>>();
 
-        assert_eq!(bridges, vec![0, 1]);
+        assert_eq!(bridges, vec![0]);
         assert_eq!(articulation_points, vec![1]);
     }
 }
