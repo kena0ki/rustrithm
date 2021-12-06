@@ -8,3 +8,5 @@ pub mod range_query;
 pub mod rng;
 pub mod scanner;
 pub mod string_proc;
+pub mod bitarray;
+pub mod util;
