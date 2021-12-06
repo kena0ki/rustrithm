@@ -2,6 +2,7 @@ pub mod dynamic_arq;
 pub mod specs;
 pub mod sqrt_decomp;
 pub mod static_arq;
+pub mod fenwick;
 pub use dynamic_arq::{ArqView, DynamicArq};
 pub use specs::ArqSpec;
 pub use static_arq::StaticArq;
