@@ -4,6 +4,8 @@
 //! Also, use the commented code in main() to employ standard I/O.
 extern crate contest_algorithms;
 use contest_algorithms::graph::Graph;
+use contest_algorithms::graph::Edge;
+use contest_algorithms::graph::InDegree;
 use contest_algorithms::range_query::{specs::AssignSum, StaticArq};
 use contest_algorithms::scanner::Scanner;
 use std::io;
@@ -40,7 +42,7 @@ const SAMPLE_OUTPUT: &[u8] = b"\
 ";
 
 fn dfs(
-    graph: &Graph,
+    graph: &Graph<Edge>,
     u: usize,
     l: &mut [usize],
     r: &mut [usize],
@@ -50,7 +52,7 @@ fn dfs(
     *time += 1;
     l[u] = *time;
 
-    for (_, v) in graph.adj_list(u) {
+    for InDegree{v, ..} in graph.adj_list(u) {
         if l[v] == 0 {
             p[v] = l[u];
             dfs(graph, v, l, r, p, time);
