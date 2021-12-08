@@ -11,8 +11,10 @@ use std::ops::{Add,Sub,Mul,Div, AddAssign, SubAssign, MulAssign, DivAssign};
 /// let m1 = ModU64::<5>::new(2);
 /// let m2 = m1.sibling(4);
 ///
-/// assert_eq!(ModU64::<5>::new(1), m1+m2);
-/// assert_eq!(ModU64::<5>::new(1), 9+m1);
+/// assert_eq!(m1.sibling(1), m1+m2);
+/// assert_eq!(m1.sibling(3), 9*m1);
+/// assert_eq!(m1.sibling(4), ModU64::<5>::from_i64(-1));
+///
 /// ```
 #[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
 pub struct ModU64<const N:u64>{
@@ -23,6 +25,13 @@ impl <const N:u64> ModU64<N> {
     /// Creates a new instance.
     pub fn new(val: u64) -> Self {
         return Self{ modulus: N, val: val%N };
+    }
+    /// Creates a new instance from i64.
+    /// The result value is guaranteed to be positive by adding the modulus if the given value is negative.
+    pub fn from_i64(val: i64) -> Self {
+        let val = val%N as i64;
+        let val = if val < 0 { val + N as i64 } else { val };
+        return Self { val: val as u64, modulus: N };
     }
     /// Creates a new instance using the same modulus of the current instance.
     pub fn sibling(self: &Self, val:u64) -> Self {
@@ -36,7 +45,7 @@ impl <const N:u64> ModU64<N> {
         return self.val;
     }
     /// Gets the power of this value.
-    pub fn pow(self: Self, mut power: u64) -> Self{
+    pub fn pow(&self, mut power: u64) -> Self{
         let mut square = self.val;
         let mut ret = 1;
         while 0 < power {
@@ -54,17 +63,17 @@ impl <const N:u64> ModU64<N> {
         };
     }
     /// Gets the inverse of this value.
-    pub fn inv(self: Self) -> Self {
+    pub fn inv(&self) -> Self {
         return self.pow(self.modulus - 2);
     }
-    fn add_premitive(self: &Self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    fn add_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         lhs += rhs;
         if lhs >= self.modulus {
             lhs -= self.modulus;
         }
         return lhs;
     }
-    fn sub_premitive(self: &Self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    fn sub_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         if lhs < rhs {
             lhs += self.modulus - rhs;
         } else {
@@ -72,12 +81,12 @@ impl <const N:u64> ModU64<N> {
         }
         return lhs;
     }
-    fn mul_premitive(self: &Self, lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    fn mul_premitive(&self, lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         return (lhs * rhs) % self.modulus;
     }
     // a^(-1) ≡ a^(p-2)  (mod p)  where p is prime
     // https://en.wikipedia.org/wiki/Modular_arithmetic#Properties
-    fn div_premitive(self: &Self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    fn div_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         let mut power = self.modulus - 2;
         let mut square = rhs;
         while 0 < power {
@@ -90,6 +99,12 @@ impl <const N:u64> ModU64<N> {
             power >>= 1;
         }
         return lhs;
+    }
+}
+
+impl <const N:u64> From<ModU64<N>> for u64 {
+    fn from(mu: ModU64<N>) -> Self {
+        return mu.val;
     }
 }
 
