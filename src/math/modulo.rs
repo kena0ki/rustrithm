@@ -1,6 +1,7 @@
 //! Helper for modulo calculation.
 
 use std::ops::{Add,Sub,Mul,Div, AddAssign, SubAssign, MulAssign, DivAssign};
+use std::fmt;
 
 /// Represents a mod N number.
 ///
@@ -105,6 +106,12 @@ impl <const N:u64> ModU64<N> {
 impl <const N:u64> From<ModU64<N>> for u64 {
     fn from(mu: ModU64<N>) -> Self {
         return mu.val;
+    }
+}
+
+impl <const N:u64> fmt::Display for ModU64<N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return write!(f, "{}",self.val);
     }
 }
 
