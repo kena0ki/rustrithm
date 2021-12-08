@@ -134,6 +134,11 @@ impl<T: ArqSpec> StaticArq<T> {
         }
         T::op(&l_agg, &r_agg)
     }
+
+    /// For debug
+    pub fn show(self: &Self) -> &[T::S] {
+        return &self.val[self.app.len()..];
+    }
 }
 
 /// An example of binary search to find the first position whose element is negative.
