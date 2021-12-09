@@ -11,3 +11,10 @@ keywords = ["competitive", "programming", "codeforces"]
 categories = ["algorithms", "data-structures"]
 license = "MIT"
 
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "bitarray"
+harness = false
+
