@@ -17,7 +17,7 @@ use std::fmt;
 /// assert_eq!(m1.sibling(4), ModU64::<5>::from_i64(-1));
 ///
 /// ```
-#[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
 pub struct ModU64<const N:u64>{
     modulus: u64,
     val: u64,
@@ -110,6 +110,12 @@ impl <const N:u64> From<ModU64<N>> for u64 {
 }
 
 impl <const N:u64> fmt::Display for ModU64<N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return write!(f, "{}",self.val);
+    }
+}
+
+impl <const N:u64> fmt::Debug for ModU64<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         return write!(f, "{}",self.val);
     }
