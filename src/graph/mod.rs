@@ -15,24 +15,24 @@ use std::cmp::Reverse;
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
 pub struct Edge {
-    u: usize,
-    v: usize,
+    pub u: usize,
+    pub v: usize,
 }
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
 pub struct WeightedEdge {
-    u: usize,
-    v: usize,
-    weight: i64,
+    pub u: usize,
+    pub v: usize,
+    pub weight: i64,
 }
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
 pub struct FlowEdge {
-    u: usize,
-    v: usize,
-    cap: i64,
-    cost: i64,
-    flow: i64,
+    pub u: usize,
+    pub v: usize,
+    pub cap: i64,
+    pub cost: i64,
+    pub flow: i64,
 }
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
