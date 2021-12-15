@@ -97,6 +97,11 @@ impl <T:std::fmt::Debug> Graph<T> {
         return self.adj.get(&u).unwrap_or(&BTreeSet::new()).to_owned();
     }
 
+    /// Gets an edge
+    pub fn edge(&self, edge_id: usize) -> &T {
+        return &self.edges[edge_id];
+    }
+
     pub fn debug_print(&self) {
         for e in &self.edges {
             println!("{:?}", e);
