@@ -26,6 +26,19 @@ mod test {
     }
 
     #[test]
+    fn test_rmq_max() {
+        let mut arq = StaticArq::<AssignMax>::new(&[0; 10]);
+
+        assert_eq!(arq.query(0, 9), 0);
+
+        arq.update(2, 4, &-5);
+        arq.update(5, 7, &3);
+        arq.update(1, 6, &1);
+
+        assert_eq!(arq.query(0, 9), 3);
+    }
+
+    #[test]
     fn test_dynamic_rmq() {
         let mut arq = DynamicArq::<AssignMin>::new(false);
         let view = arq.build_from_slice(&[0; 10]);

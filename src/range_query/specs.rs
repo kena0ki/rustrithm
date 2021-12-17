@@ -124,3 +124,22 @@ impl ArqSpec for SupplyDemand {
         (p, o, p.min(o))
     }
 }
+
+pub enum AssignMax {}
+impl ArqSpec for AssignMax {
+    type S = i64;
+    type F = i64;
+    fn op(&a: &Self::S, &b: &Self::S) -> Self::S {
+        a.max(b)
+    }
+    fn identity() -> Self::S {
+        0
+    }
+    fn compose(&f: &Self::F, _: &Self::F) -> Self::F {
+        f
+    }
+    fn apply(&f: &Self::F, _: &Self::S, _: i64) -> Self::S {
+        f
+    }
+}
+
