@@ -24,7 +24,11 @@ pub struct Rational {
 }
 impl Rational {
     pub fn new(num: i64, den: i64) -> Self {
-        let g = fast_gcd(num, den) * den.signum();
+        if num == 0 && den == 0 {
+            panic!("0/0 is illegal");
+        }
+        let sign = if den < 0 { -1 } else { 1 };
+        let g = fast_gcd(num, den) * sign;
         Self {
             num: num / g,
             den: den / g,
@@ -37,10 +41,10 @@ impl Rational {
         }
     }
     pub fn recip(self) -> Self {
-        let g = self.num.signum();
+        let sign = if self.num < 0 { -1 } else { 1 };
         Self {
-            num: self.den / g,
-            den: self.num / g,
+            num: self.den / sign,
+            den: self.num / sign,
         }
     }
 }
@@ -93,6 +97,9 @@ impl Div for Rational {
 }
 impl Ord for Rational {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if self.den == 0 && other.den == 0 {
+            return self.num.cmp(&other.num);
+        }
         (self.num * other.den).cmp(&(self.den * other.num))
     }
 }
@@ -401,6 +408,18 @@ mod test {
         assert_eq!(three_and_half, -minus_three_and_half);
         assert_eq!(zero.num, 0);
         assert_eq!(zero.den, 1);
+
+        assert!(Rational::new(1,0) > Rational::new(i64::MAX, 1));
+        assert!(Rational::new(1,0) > Rational::new(i64::MIN+1, -1));
+        assert!(Rational::new(-1,0) < Rational::new(i64::MIN, 1));
+        assert!(Rational::new(-1,0) < Rational::new(i64::MAX, -1));
+        assert!(Rational::new(-1,0) < Rational::new(1,0));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_rational_0_0() {
+        Rational::new(0,0);
     }
 
     #[test]
