@@ -2,7 +2,7 @@
 //! implemented minimally for contest use.
 //! If you need more features, you might be interested in crates.io/crates/num
 pub use std::f64::consts::PI;
-use std::ops::{Add, Div, Index, IndexMut, Mul, Neg, Sub};
+use std::{ops::{Add, Div, Index, IndexMut, Mul, Neg, Sub}, fmt::{Display, Debug}};
 
 /// Fast iterative version of Euclid's GCD algorithm
 pub fn fast_gcd(mut a: i64, mut b: i64) -> i64 {
@@ -17,7 +17,7 @@ pub fn fast_gcd(mut a: i64, mut b: i64) -> i64 {
 }
 
 /// Represents a fraction reduced to lowest terms
-#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Rational {
     pub num: i64,
     pub den: i64,
@@ -106,6 +106,18 @@ impl Ord for Rational {
 impl PartialOrd for Rational {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Display for Rational {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}", self.num as f64 / self.den as f64);
+    }
+}
+
+impl Debug for Rational {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(f, "{}/{}", self.num, self.den);
     }
 }
 
