@@ -7,7 +7,7 @@ use std::{ops::{Add, Div, Index, IndexMut, Mul, Neg, Sub}, fmt::{Display, Debug}
 /// Fast iterative version of Euclid's GCD algorithm
 pub fn fast_gcd(mut a: i64, mut b: i64) -> i64 {
     if a == 0 {
-        return b;
+        return b.abs();
     };
     while b != 0 {
         a %= b;
