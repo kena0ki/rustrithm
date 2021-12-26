@@ -180,7 +180,6 @@ impl FlowGraph {
 
         let (mut min_cost, mut max_flow) = (0, 0);
         loop {
-            println!("flow_limit: {:?}", flow_limit);
             if flow_limit <= 0 {
                 break;
             }
