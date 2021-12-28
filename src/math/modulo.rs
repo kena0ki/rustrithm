@@ -121,6 +121,12 @@ impl <const N:u64> fmt::Debug for ModU64<N> {
     }
 }
 
+impl <const N:u64> Default for ModU64<N> {
+    fn default() -> Self {
+        return Self { modulus: N, val:0 };
+    }
+}
+
 macro_rules! assign_binop {
     (impl $imp:ident, $method:ident for $t:ident, $internal_method:ident) => {
         impl <const N:u64> $imp for $t<N> {
