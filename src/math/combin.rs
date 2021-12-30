@@ -42,17 +42,85 @@ impl <const M:u64> Factorial<M>{
     pub fn ifact(&self) -> &Vec<ModU64<M>> { &self.ifact }
 }
 
+pub struct Permutations<T> {
+    items: Vec<T>,
+    swaps: Vec<usize>,
+    i: usize,
+}
+
+impl <T> Permutations<T> {
+    pub fn new(items: Vec<T>) -> Permutations<T> {
+        let swaps = vec![0; items.len()];
+        Permutations { items, swaps, i: 0 }
+    }
+}
+
+impl <T:Clone> Iterator for Permutations<T> {
+    type Item = Vec<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.i > 0 {
+            loop {
+                if self.i >= self.swaps.len() { return None; }
+                if self.swaps[self.i] < self.i { break; }
+                self.swaps[self.i] = 0;
+                self.i += 1;
+            }
+            self.items.swap(self.i, (self.i & 1) * self.swaps[self.i]);
+            self.swaps[self.i] += 1;
+        }
+        self.i = 1;
+        return Some(self.items.clone());
+    }
+}
+
 #[cfg(test)]
 mod test {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
-    fn test_combin() {
+    fn test_factorial() {
         let f = Factorial::<1009>::new(10);
         assert_eq!(720,f.kperm(3).val());
         assert_eq!(120,f.kcombin(3).val());
         let f = Factorial::<11>::new(10);
         assert_eq!(5,f.kperm(3).val());
         assert_eq!(10,f.kcombin(3).val());
+    }
+
+    #[test]
+    fn test_permutation() {
+        let p = Permutations::new((0..3).collect::<Vec<_>>());
+        let expected = HashSet::from([
+          vec![0, 1, 2],
+          vec![0, 2, 1],
+          vec![1, 0, 2],
+          vec![1, 2, 0],
+          vec![2, 0, 1],
+          vec![2, 1, 0],
+        ]);
+        assert_eq!(expected,p.collect::<HashSet<_>>());
+
+        let p = Permutations::new([0,0,1,2].to_vec());
+        let expected = HashSet::from([
+          vec![0, 0, 1, 2],
+          vec![0, 0, 2, 1],
+          vec![0, 1, 0, 2],
+          vec![0, 1, 2, 0],
+          vec![0, 2, 0, 1],
+          vec![0, 2, 1, 0],
+          vec![1, 0, 0, 2],
+          vec![1, 0, 2, 0],
+          vec![1, 2, 0, 0],
+          vec![2, 0, 0, 1],
+          vec![2, 0, 1, 0],
+          vec![2, 1, 0, 0],
+        ]);
+        assert_eq!(expected,p.collect::<HashSet<_>>());
+
+        let p = Permutations::new([0,0,1,2].to_vec());
+        assert_eq!(24,p.collect::<Vec<_>>().len());
     }
 }
