@@ -46,12 +46,14 @@ pub struct Permutations<T> {
     items: Vec<T>,
     swaps: Vec<usize>,
     i: usize,
+    next: Option<Vec<T>>,
 }
 
-impl <T> Permutations<T> {
+impl <T:Clone> Permutations<T> {
     pub fn new(items: Vec<T>) -> Permutations<T> {
         let swaps = vec![0; items.len()];
-        Permutations { items, swaps, i: 0 }
+        let next = Some(items.clone());
+        Permutations { items, swaps, i: 1, next }
     }
 }
 
@@ -59,18 +61,24 @@ impl <T:Clone> Iterator for Permutations<T> {
     type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.i > 0 {
-            loop {
-                if self.i >= self.swaps.len() { return None; }
-                if self.swaps[self.i] < self.i { break; }
-                self.swaps[self.i] = 0;
-                self.i += 1;
+        let next = self.next.clone();
+        loop {
+            if self.i >= self.items.len() {
+                let next = self.next;
+                self.next = None;
+                return next;
             }
-            self.items.swap(self.i, (self.i & 1) * self.swaps[self.i]);
-            self.swaps[self.i] += 1;
+            if self.swaps[self.i] < self.i {
+                break;
+            }
+            self.swaps[self.i] = 0;
+            self.i += 1;
         }
+        self.items.swap(self.i, (self.i & 1) * self.swaps[self.i]);
+        self.swaps[self.i] += 1;
         self.i = 1;
-        return Some(self.items.clone());
+        self.next = Some(self.items.clone());
+        return next;
     }
 }
 
