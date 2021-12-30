@@ -64,7 +64,6 @@ impl <T:Clone> Iterator for Permutations<T> {
         let next = self.next.clone();
         loop {
             if self.i >= self.items.len() {
-                let next = self.next;
                 self.next = None;
                 return next;
             }
