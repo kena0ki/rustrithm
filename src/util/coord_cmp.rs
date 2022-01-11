@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap,BTreeSet};
-pub fn coord_cmp<T:Ord+Clone+Copy>(a: &mut Vec<T>) -> (Vec<usize>, usize) {
+pub fn coord_cmp<T:Ord+Clone+Copy>(a: &Vec<T>) -> (Vec<usize>, usize) {
     let mut set = BTreeSet::<T>::new();
     for i in 0..a.len() {
         set.insert(a[i]);
@@ -15,4 +15,15 @@ pub fn coord_cmp<T:Ord+Clone+Copy>(a: &mut Vec<T>) -> (Vec<usize>, usize) {
         ret[i] = *mem.get(&a[i]).unwrap();
     }
     return (ret, size);
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_coord_comp() {
+        let mut coords = vec![16, 99, 45, 18];
+        let comp = coord_cmp(&mut coords);
+        assert_eq!(vec![0,3,2,1], comp.0);
+    }
 }
