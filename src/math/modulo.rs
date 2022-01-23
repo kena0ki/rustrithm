@@ -24,29 +24,29 @@ pub struct ModU64<const N:u64>{
 }
 impl <const N:u64> ModU64<N> {
     /// Creates a new instance.
-    pub fn new(val: u64) -> Self {
+    pub const fn new(val: u64) -> Self {
         return Self{ modulus: N, val: val%N };
     }
     /// Creates a new instance from i64.
     /// The result value is guaranteed to be positive by adding the modulus if the given value is negative.
-    pub fn from_i64(val: i64) -> Self {
+    pub const fn from_i64(val: i64) -> Self {
         let val = val%N as i64;
         let val = if val < 0 { val + N as i64 } else { val };
         return Self { val: val as u64, modulus: N };
     }
     /// Creates a new instance using the same modulus of the current instance.
-    pub fn sibling(self: &Self, val:u64) -> Self {
+    pub const fn sibling(self: &Self, val:u64) -> Self {
         return Self {
             modulus: self.modulus,
             val: val%self.modulus,
         };
     }
     /// Gets the underlying value as u64.
-    pub fn val(&self) -> u64 {
+    pub const fn val(&self) -> u64 {
         return self.val;
     }
     /// Gets the power of this value.
-    pub fn pow(&self, mut power: u64) -> Self{
+    pub const fn pow(&self, mut power: u64) -> Self{
         let mut square = self.val;
         let mut ret = 1;
         while 0 < power {
@@ -64,17 +64,17 @@ impl <const N:u64> ModU64<N> {
         };
     }
     /// Gets the inverse of this value.
-    pub fn inv(&self) -> Self {
+    pub const fn inv(&self) -> Self {
         return self.pow(self.modulus - 2);
     }
-    fn add_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn add_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         lhs += rhs;
         if lhs >= self.modulus {
             lhs -= self.modulus;
         }
         return lhs;
     }
-    fn sub_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn sub_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         if lhs < rhs {
             lhs += self.modulus - rhs;
         } else {
@@ -82,12 +82,12 @@ impl <const N:u64> ModU64<N> {
         }
         return lhs;
     }
-    fn mul_premitive(&self, lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn mul_premitive(&self, lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         return (lhs * rhs) % self.modulus;
     }
     // a^(-1) ≡ a^(p-2)  (mod p)  where p is prime
     // https://en.wikipedia.org/wiki/Modular_arithmetic#Properties
-    fn div_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn div_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         let mut power = self.modulus - 2;
         let mut square = rhs;
         while 0 < power {
