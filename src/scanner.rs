@@ -32,6 +32,10 @@ impl<R: io::BufRead> Scanner<R> {
             self.buffer = input.split_whitespace().rev().map(String::from).collect();
         }
     }
+    pub fn token_bytes(&mut self) -> Vec<u8> {
+        let s = self.token::<String>();
+        return s.as_bytes().into();
+    }
 }
 
 /// Same API as Scanner but nearly twice as fast, using horribly unsafe dark arts
