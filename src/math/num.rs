@@ -396,6 +396,19 @@ impl Mul for &Matrix {
     }
 }
 
+impl From<Vec<Vec<f64>>> for Matrix {
+    fn from(v: Vec<Vec<f64>>) -> Self {
+        let row = v.len();
+        let col = v[0].len();
+        let mut m = Matrix::zero(v.len(), v[0].len());
+        for i in 0..row { for j in 0..col {
+            m[i][j] = v[i][j];
+        }}
+        return m;
+    }
+
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

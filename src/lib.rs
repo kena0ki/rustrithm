@@ -10,3 +10,4 @@ pub mod scanner;
 pub mod string_proc;
 pub mod bitarray;
 pub mod collection;
+pub mod geometry;
