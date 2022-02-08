@@ -1,9 +1,11 @@
 use std::collections::BTreeSet;
 use std::collections::btree_set::{Iter, Range};
+use std::iter::Map;
 use std::ops::Bound::{Included, self,Excluded};
 use std::ops::RangeBounds;
 
 
+#[derive(Debug,Clone)]
 pub struct MultiSet<T:Ord+Copy> {
     s: BTreeSet<(T,usize)>
 }
@@ -61,11 +63,14 @@ impl <T:Ord+Copy> MultiSet<T> {
     pub fn is_empty(&self) -> bool {
         return self.s.is_empty();
     }
-    pub fn iter(&self) -> Iter<'_, (T,usize)> {
-        return self.s.iter();
+    pub fn iter(&self) -> Map<Iter<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T> {
+        return self.s.iter().map(Self::filter);
+    }
+    fn filter(v: &(T,usize)) -> T{
+        return v.0;
     }
 
-    pub fn range<R>(&self, range: R) -> Range<'_, (T,usize)>
+    pub fn range<R>(&self, range: R) -> Map<Range<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T>
     where
         R: RangeBounds<T>,
     {
@@ -79,7 +84,10 @@ impl <T:Ord+Copy> MultiSet<T> {
             Included(&b) => Included((b,usize::MAX)),
             Excluded(&b) => Excluded((b,0)),
         };
-        return self.s.range((start,end));
+        return self.s.range((start,end)).map(Self::filter);
+    }
+    pub fn multiset(&self) -> &BTreeSet<(T,usize)> {
+        return &self.s;
     }
 }
 
@@ -96,18 +104,18 @@ mod test {
         ms.remove_one(3);
         ms.insert(3);
         let mut it = ms.iter();
-        assert_eq!(Some(&(1,0)),it.next());
-        assert_eq!(Some(&(3,0)),it.next());
-        assert_eq!(Some(&(3,1)),it.next());
-        assert_eq!(Some(&(4,0)),it.next());
+        assert_eq!(Some(1),it.next());
+        assert_eq!(Some(3),it.next());
+        assert_eq!(Some(3),it.next());
+        assert_eq!(Some(4),it.next());
         assert_eq!(None,it.next());
         let mut rg = ms.range(3..5);
-        assert_eq!(Some(&(3,0)),rg.next());
-        assert_eq!(Some(&(3,1)),rg.next());
-        assert_eq!(Some(&(4,0)),rg.next());
+        assert_eq!(Some(3),rg.next());
+        assert_eq!(Some(3),rg.next());
+        assert_eq!(Some(4),rg.next());
         assert_eq!(None,rg.next());
         let mut rg = ms.range(1..3);
-        assert_eq!(Some(&(1,0)),rg.next());
+        assert_eq!(Some(1),rg.next());
         assert_eq!(None,rg.next());
 
         assert_eq!(2,ms.count(3));
