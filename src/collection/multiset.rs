@@ -20,12 +20,21 @@ impl <T:Ord+Copy> MultiSet<T> {
             self.s.insert((val,0));
         }
     }
-    pub fn remove(&mut self, val: T) -> bool {
+    pub fn remove_one(&mut self, val: T) -> bool {
         let r = self.s.range((Included(&(val,0)),Included(&(val,usize::MAX))));
         if let Some(&v) = r.last() {
             return self.s.remove(&v);
         }
         return false;
+    }
+    pub fn remove_all(&mut self, val: T) -> usize {
+        let r = self.s.range((Included(&(val,0)),Included(&(val,usize::MAX))));
+        let len = self.s.len();
+        let vec = r.copied().collect::<Vec<_>>();
+        for v in &vec {
+            self.s.remove(v);
+        }
+        return len - self.s.len();
     }
     pub fn get(&self, val: T) -> Option<T> {
         if let Some(v) = self.s.get(&(val,0)) {
@@ -74,7 +83,7 @@ mod test {
         ms.insert(3);
         ms.insert(1);
         ms.insert(3);
-        ms.remove(3);
+        ms.remove_one(3);
         ms.insert(3);
         let mut it = ms.iter();
         assert_eq!(Some(&(1,0)),it.next());
@@ -94,11 +103,14 @@ mod test {
 
         assert_eq!(2,ms.count(3));
         assert_eq!(Some(3),ms.get(3));
-        ms.remove(3);
+        ms.remove_one(3);
         assert_eq!(1,ms.count(3));
         assert_eq!(Some(3),ms.get(3));
-        ms.remove(3);
+        ms.remove_one(3);
         assert_eq!(0,ms.count(3));
         assert_eq!(None,ms.get(3));
+
+        ms.insert(4);
+        assert_eq!(2, ms.remove_all(4));
     }
 }
