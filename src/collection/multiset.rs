@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 use std::collections::btree_set::{Iter, Range};
-use std::ops::Bound::Included;
+use std::ops::Bound::{Included, self,Excluded};
 use std::ops::RangeBounds;
 
 
@@ -67,9 +67,19 @@ impl <T:Ord+Copy> MultiSet<T> {
 
     pub fn range<R>(&self, range: R) -> Range<'_, (T,usize)>
     where
-        R: RangeBounds<(T,usize)>,
+        R: RangeBounds<T>,
     {
-        return self.s.range(range);
+        let start = match range.start_bound() {
+            Bound::Unbounded => Bound::Unbounded,
+            Included(&b) => Included((b,0)),
+            Excluded(&b) => Excluded((b,usize::MAX)),
+        };
+        let end = match range.end_bound() {
+            Bound::Unbounded => Bound::Unbounded,
+            Included(&b) => Included((b,usize::MAX)),
+            Excluded(&b) => Excluded((b,0)),
+        };
+        return self.s.range((start,end));
     }
 }
 
@@ -91,14 +101,13 @@ mod test {
         assert_eq!(Some(&(3,1)),it.next());
         assert_eq!(Some(&(4,0)),it.next());
         assert_eq!(None,it.next());
-        let mut rg = ms.range((3,0)..(5,0));
+        let mut rg = ms.range(3..5);
         assert_eq!(Some(&(3,0)),rg.next());
         assert_eq!(Some(&(3,1)),rg.next());
         assert_eq!(Some(&(4,0)),rg.next());
         assert_eq!(None,rg.next());
-        let mut rg = ms.range((1,0)..(3,1));
+        let mut rg = ms.range(1..3);
         assert_eq!(Some(&(1,0)),rg.next());
-        assert_eq!(Some(&(3,0)),rg.next());
         assert_eq!(None,rg.next());
 
         assert_eq!(2,ms.count(3));
