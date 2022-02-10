@@ -4,7 +4,6 @@ use super::modulo::ModU64;
 pub struct Factorial<const M:u64> {
     fact: Vec<ModU64<M>>,
     ifact: Vec<ModU64<M>>,
-    n: usize,
 }
 impl <const M:u64> Factorial<M>{
     pub fn new(n:usize) -> Self{
@@ -19,27 +18,35 @@ impl <const M:u64> Factorial<M>{
         for i in (3..=n).rev() {
             ifact[i-1] = ifact[i] * i as u64;
         }
-        return Self { fact, ifact, n};
+        return Self { fact, ifact};
     }
 
-    pub fn kperm <T: TryInto<usize>>(&self,k:T) -> ModU64<M> {
+    pub fn perm <T: TryInto<usize>>(&self,n:T,k:T) -> ModU64<M> {
+        let n = n.try_into().ok().expect("Unable to cast n to usize");
         let k = k.try_into().ok().expect("Unable to cast k to usize");
-        if self.n < k {
+        if n < k {
             return ModU64::<M>::new(0);
         }
-        return self.fact[self.n]*self.ifact[self.n-k];
+        return self.fact[n]*self.ifact[n-k];
     }
 
-    pub fn kcombin <T: TryInto<usize>>(&self, k:T) -> ModU64<M> {
+    pub fn combin <T: TryInto<usize>>(&self,n:T,k:T) -> ModU64<M> {
+        let n = n.try_into().ok().expect("Unable to cast n to usize");
         let k = k.try_into().ok().expect("Unable to cast k to usize");
-        if self.n < k {
+        if n < k {
             return ModU64::<M>::new(0);
         }
-        return self.fact[self.n]*self.ifact[k]*self.ifact[self.n-k];
+        return self.fact[n]*self.ifact[k]*self.ifact[n-k];
     }
 
     pub fn fact(&self) -> &Vec<ModU64<M>> { &self.fact }
     pub fn ifact(&self) -> &Vec<ModU64<M>> { &self.ifact }
+}
+
+impl <const M:u64> Default for Factorial<M>{
+    fn default() -> Self {
+        return Self::new(1_000_000);
+    }
 }
 
 pub struct Permutations<T> {
@@ -89,11 +96,13 @@ mod test {
     #[test]
     fn test_factorial() {
         let f = Factorial::<1009>::new(10);
-        assert_eq!(720,f.kperm(3).val());
-        assert_eq!(120,f.kcombin(3).val());
+        assert_eq!(720,f.perm(10,3).val());
+        assert_eq!(120,f.combin(10,3).val());
+        assert_eq!(72,f.perm(9,2).val());
+        assert_eq!(36,f.combin(9,2).val());
         let f = Factorial::<11>::new(10);
-        assert_eq!(5,f.kperm(3).val());
-        assert_eq!(10,f.kcombin(3).val());
+        assert_eq!(5,f.perm(10,3).val());
+        assert_eq!(10,f.combin(10,3).val());
     }
 
     #[test]
