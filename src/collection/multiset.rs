@@ -63,14 +63,31 @@ impl <T:Ord+Copy> MultiSet<T> {
     pub fn is_empty(&self) -> bool {
         return self.s.is_empty();
     }
-    pub fn iter(&self) -> Map<Iter<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T> {
+    pub fn last(&self) -> Option<T> {
+        if let Some(v) = self.s.iter().last() {
+            return Some(v.0);
+        } else {
+            return None;
+        }
+    }
+    pub fn first(&self) -> Option<T> {
+        if let Some(v) = self.s.iter().next() {
+            return Some(v.0);
+        } else {
+            return None;
+        }
+    }
+
+    // this method is slow for some reason.
+    pub fn _iter(&self) -> Map<Iter<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T> {
         return self.s.iter().map(Self::filter);
     }
     fn filter(v: &(T,usize)) -> T{
         return v.0;
     }
 
-    pub fn range<R>(&self, range: R) -> Map<Range<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T>
+    // this method is slow for some reason.
+    pub fn _range<R>(&self, range: R) -> Map<Range<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T>
     where
         R: RangeBounds<T>,
     {
@@ -103,18 +120,20 @@ mod test {
         ms.insert(3);
         ms.remove_one(3);
         ms.insert(3);
-        let mut it = ms.iter();
+        assert_eq!(1,ms.first().unwrap());
+        assert_eq!(4,ms.last().unwrap());
+        let mut it = ms._iter();
         assert_eq!(Some(1),it.next());
         assert_eq!(Some(3),it.next());
         assert_eq!(Some(3),it.next());
         assert_eq!(Some(4),it.next());
         assert_eq!(None,it.next());
-        let mut rg = ms.range(3..5);
+        let mut rg = ms._range(3..5);
         assert_eq!(Some(3),rg.next());
         assert_eq!(Some(3),rg.next());
         assert_eq!(Some(4),rg.next());
         assert_eq!(None,rg.next());
-        let mut rg = ms.range(1..3);
+        let mut rg = ms._range(1..3);
         assert_eq!(Some(1),rg.next());
         assert_eq!(None,rg.next());
 
@@ -129,5 +148,6 @@ mod test {
 
         ms.insert(4);
         assert_eq!(2, ms.remove_all(4));
+
     }
 }
