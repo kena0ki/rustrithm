@@ -77,9 +77,7 @@ impl <T:Ord+Copy> MultiSet<T> {
             return None;
         }
     }
-
-    // this method is slow for some reason.
-    pub fn _iter(&self) -> Map<Iter<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T> {
+    pub fn iter(&self) -> Map<Iter<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T> {
         return self.s.iter().map(Self::filter);
     }
     fn filter(v: &(T,usize)) -> T{
@@ -87,7 +85,7 @@ impl <T:Ord+Copy> MultiSet<T> {
     }
 
     // this method is slow for some reason.
-    pub fn _range<R>(&self, range: R) -> Map<Range<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T>
+    pub fn range<R>(&self, range: R) -> Map<Range<'_, (T,usize)>, impl FnMut(&(T,usize)) -> T>
     where
         R: RangeBounds<T>,
     {
@@ -122,18 +120,18 @@ mod test {
         ms.insert(3);
         assert_eq!(1,ms.first().unwrap());
         assert_eq!(4,ms.last().unwrap());
-        let mut it = ms._iter();
+        let mut it = ms.iter();
         assert_eq!(Some(1),it.next());
         assert_eq!(Some(3),it.next());
         assert_eq!(Some(3),it.next());
         assert_eq!(Some(4),it.next());
         assert_eq!(None,it.next());
-        let mut rg = ms._range(3..5);
+        let mut rg = ms.range(3..5);
         assert_eq!(Some(3),rg.next());
         assert_eq!(Some(3),rg.next());
         assert_eq!(Some(4),rg.next());
         assert_eq!(None,rg.next());
-        let mut rg = ms._range(1..3);
+        let mut rg = ms.range(1..3);
         assert_eq!(Some(1),rg.next());
         assert_eq!(None,rg.next());
 
