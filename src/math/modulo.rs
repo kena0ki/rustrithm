@@ -3,6 +3,12 @@
 use std::ops::{Add,Sub,Mul,Div, AddAssign, SubAssign, MulAssign, DivAssign};
 use std::fmt;
 
+pub const MOD998244353:u64 = 998244353;
+pub const MOD1000000007:u64 = 1000000007;
+
+pub const ZERO_MOD998244353:ModU64<MOD998244353> = ModU64::<MOD998244353>::new(0);
+pub const ZERO_MOD1000000007:ModU64<MOD1000000007> = ModU64::<MOD1000000007>::new(0);
+
 /// Represents a mod N number.
 ///
 /// # Example
@@ -67,14 +73,14 @@ impl <const N:u64> ModU64<N> {
     pub const fn inv(&self) -> Self {
         return self.pow(self.modulus - 2);
     }
-    const fn add_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn add_u64(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         lhs += rhs;
         if lhs >= self.modulus {
             lhs -= self.modulus;
         }
         return lhs;
     }
-    const fn sub_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn sub_u64(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         if lhs < rhs {
             lhs += self.modulus - rhs;
         } else {
@@ -82,12 +88,12 @@ impl <const N:u64> ModU64<N> {
         }
         return lhs;
     }
-    const fn mul_premitive(&self, lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn mul_u64(&self, lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         return (lhs * rhs) % self.modulus;
     }
     // a^(-1) ≡ a^(p-2)  (mod p)  where p is prime
     // https://en.wikipedia.org/wiki/Modular_arithmetic#Properties
-    const fn div_premitive(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
+    const fn div_u64(&self, mut lhs: u64, rhs: u64) -> u64{ // lhs and rhs should not be greater than modulus.
         let mut power = self.modulus - 2;
         let mut square = rhs;
         while 0 < power {
@@ -146,14 +152,14 @@ macro_rules! assign_binop {
     };
 }
 
-assign_binop!(impl AddAssign, add_assign for ModU64, add_premitive);
-assign_binop!(impl SubAssign, sub_assign for ModU64, sub_premitive);
-assign_binop!(impl MulAssign, mul_assign for ModU64, mul_premitive);
-assign_binop!(impl DivAssign, div_assign for ModU64, div_premitive);
-assign_binop!(impl AddAssign, add_assign for ModU64, u64, add_premitive);
-assign_binop!(impl SubAssign, sub_assign for ModU64, u64, sub_premitive);
-assign_binop!(impl MulAssign, mul_assign for ModU64, u64, mul_premitive);
-assign_binop!(impl DivAssign, div_assign for ModU64, u64, div_premitive);
+assign_binop!(impl AddAssign, add_assign for ModU64, add_u64);
+assign_binop!(impl SubAssign, sub_assign for ModU64, sub_u64);
+assign_binop!(impl MulAssign, mul_assign for ModU64, mul_u64);
+assign_binop!(impl DivAssign, div_assign for ModU64, div_u64);
+assign_binop!(impl AddAssign, add_assign for ModU64, u64, add_u64);
+assign_binop!(impl SubAssign, sub_assign for ModU64, u64, sub_u64);
+assign_binop!(impl MulAssign, mul_assign for ModU64, u64, mul_u64);
+assign_binop!(impl DivAssign, div_assign for ModU64, u64, div_u64);
 
 macro_rules! binop {
     (impl $imp:ident, $method:ident for $t:ident, $internal_method:ident) => {
@@ -185,14 +191,14 @@ macro_rules! binop {
         }
     };
 }
-binop!(impl Add, add for ModU64, add_premitive);
-binop!(impl Sub, sub for ModU64, sub_premitive);
-binop!(impl Mul, mul for ModU64, mul_premitive);
-binop!(impl Div, div for ModU64, div_premitive);
-binop!(impl Add, add for ModU64, u64, add_premitive);
-binop!(impl Sub, sub for ModU64, u64, sub_premitive);
-binop!(impl Mul, mul for ModU64, u64, mul_premitive);
-binop!(impl Div, div for ModU64, u64, div_premitive);
+binop!(impl Add, add for ModU64, add_u64);
+binop!(impl Sub, sub for ModU64, sub_u64);
+binop!(impl Mul, mul for ModU64, mul_u64);
+binop!(impl Div, div for ModU64, div_u64);
+binop!(impl Add, add for ModU64, u64, add_u64);
+binop!(impl Sub, sub for ModU64, u64, sub_u64);
+binop!(impl Mul, mul for ModU64, u64, mul_u64);
+binop!(impl Div, div for ModU64, u64, div_u64);
 
 
 // https://stackoverflow.com/questions/38811387/how-to-implement-idiomatic-operator-overloading-for-values-and-references-in-rus/38815035#38815035
