@@ -1,5 +1,5 @@
 use std::convert::TryInto;
-use super::modulo::ModU64;
+use super::num::ModU64;
 
 pub struct Factorial<const M:u64> {
     fact: Vec<ModU64<M>>,

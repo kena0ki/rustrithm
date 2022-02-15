@@ -13,7 +13,7 @@ pub const ZERO_MOD1000000007:ModU64<MOD1000000007> = ModU64::<MOD1000000007>::ne
 ///
 /// # Example
 /// ```
-/// use rustrithm::math::modulo::ModU64;
+/// use rustrithm::math::num::ModU64;
 /// // modulus = 5
 /// let m1 = ModU64::<5>::new(2);
 /// let m2 = m1.sibling(4);

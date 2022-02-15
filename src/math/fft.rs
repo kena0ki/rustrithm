@@ -1,5 +1,5 @@
 //! The Fast Fourier Transform (FFT) and Number Theoretic Transform (NTT)
-use super::num::{CommonField, Complex, PI};
+use super::num::{CommonField, PI, Complex};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // We can delete this struct once f64::reverse_bits() stabilizes.
