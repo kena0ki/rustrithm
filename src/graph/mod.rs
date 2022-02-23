@@ -9,6 +9,7 @@ pub mod grid;
 pub mod disjoint_set;
 pub mod topo;
 pub mod util;
+pub mod rerooting;
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::cmp::Reverse;
