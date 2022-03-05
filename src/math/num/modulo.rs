@@ -8,6 +8,23 @@ pub const MOD1000000007:u64 = 1000000007;
 
 pub const ZERO_MOD998244353:ModU64<MOD998244353> = ModU64::<MOD998244353>::new(0);
 pub const ZERO_MOD1000000007:ModU64<MOD1000000007> = ModU64::<MOD1000000007>::new(0);
+pub const fn pow(val:u64, mut power: u64, modulus:u64) -> u64 {
+    let mut square = val;
+    let mut ret = 1;
+    while 0 < power {
+        if (power & 1) == 1{
+            ret *= square;
+            ret %= modulus;
+        }
+        square *= square;
+        square %= modulus;
+        power >>= 1;
+    }
+    return ret;
+}
+pub const fn inv(val: u64, modulus:u64) -> u64 {
+    return pow(val, modulus - 2, modulus);
+}
 
 /// Represents a mod N number.
 ///
@@ -52,20 +69,9 @@ impl <const N:u64> ModU64<N> {
         return self.val;
     }
     /// Gets the power of this value.
-    pub const fn pow(&self, mut power: u64) -> Self{
-        let mut square = self.val;
-        let mut ret = 1;
-        while 0 < power {
-            if (power & 1) == 1{
-                ret *= square;
-                ret %= self.modulus;
-            }
-            square *= square;
-            square %= self.modulus;
-            power >>= 1;
-        }
+    pub const fn pow(&self, power: u64) -> Self{
         return Self {
-            val:ret,
+            val:pow(self.val, power, self.modulus),
             modulus: self.modulus,
         };
     }
