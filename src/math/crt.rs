@@ -1,4 +1,3 @@
-use std::mem::swap;
 
 /// Solves the modular equation system with the Chinese remainder theorem.
 /// Original theorem has restriction on the moduli being coprime,
@@ -27,8 +26,8 @@ pub fn crt(rm: &[i64], md: &[i64]) -> Option<(i64,i64)> {
             panic!("Modulus should be greater than 0, but input was {}", m2);
         }
         if m1 < m2 {
-            swap(&mut r1,&mut r2);
-            swap(&mut m1,&mut m2);
+            std::mem::swap(&mut r1,&mut r2);
+            std::mem::swap(&mut m1,&mut m2);
         }
         if m1%m2 == 0 {
             if r1%m2 != r2 {
