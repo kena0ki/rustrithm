@@ -13,39 +13,42 @@
 ///  - The size of remainders and moduli is not the same.
 ///  - There is a modulo that is less than 1.
 ///
-// reference: https://math.stackexchange.com/questions/1644677/what-to-do-if-the-modulus-is-not-coprime-in-the-chinese-remainder-theorem
+// References:
+// https://math.stackexchange.com/questions/1644677/what-to-do-if-the-modulus-is-not-coprime-in-the-chinese-remainder-theorem
+// https://github.com/atcoder/ac-library/blob/master/atcoder/math.hpp
 pub fn crt(rm: &[i64], md: &[i64]) -> Option<(i64,i64)> {
     if rm.len() != md.len() {
         panic!("The size of remainders and moduli is not same.");
     }
-    let mut r1 = 0;
-    let mut m1 = 1;
-    for (&(mut r2), &(mut m2)) in rm.iter().zip(md) {
-        r2 = (r2+m2)%m2;
-        if m2 < 1 {
-            panic!("Modulus should be greater than 0, but input was {}", m2);
+    let mut r0 = 0;
+    let mut m0 = 1;
+    for (&(mut r1), &(mut m1)) in rm.iter().zip(md) {
+        r1 = (r1+m1)%m1;
+        if m1 < 1 {
+            panic!("Modulus should be greater than 0, but input was {}", m1);
         }
-        if m1 < m2 {
-            std::mem::swap(&mut r1,&mut r2);
-            std::mem::swap(&mut m1,&mut m2);
+        if m0 < m1 {
+            std::mem::swap(&mut r0,&mut r1);
+            std::mem::swap(&mut m0,&mut m1);
         }
-        if m1%m2 == 0 {
-            if r1%m2 != r2 {
+        if m0%m1 == 0 {
+            if r0%m1 != r1 {
                 return None;
             }
             continue;
         }
-        let (g,u,_v) = extended_gcd(m1,m2);
-        if (r1-r2)%g != 0{
+        let (g,u,_v) = extended_gcd(m0,m1);
+        if (r1-r0)%g != 0 {
             return None;
         }
-        let w = (r1-r2)/g;
-        let m12 = m1/g*m2;
-        let x = r1-((((m1*u)%m12)*w)%m12);
-        r1 = (x+m12)%m12;
-        m1 = m12;
+        let m1g = m1/g;
+        let im = (u+m1g)%m1g;
+        let w = ((r1-r0)/g)%m1g;
+        let x = r0 + ((w*im)%m1g)*m0;
+        m0 *= m1g;
+        r0 = (x+m0)%m0;
     }
-    return Some((r1,m1));
+    return Some((r0,m0));
 }
 
 fn extended_gcd(a: i64, b: i64) -> (i64, i64, i64) {
