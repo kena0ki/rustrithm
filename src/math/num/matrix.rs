@@ -35,12 +35,15 @@ impl Matrix {
         }
         result
     }
-    pub fn rows(&self) -> usize {
+    pub fn row_len(&self) -> usize {
         self.inner.len() / self.cols
     }
+    pub fn col_len(&self) -> usize {
+        self.cols
+    }
     pub fn transpose(&self) -> Self {
-        let mut matrix = Matrix::zero(self.cols, self.rows());
-        for i in 0..self.rows() {
+        let mut matrix = Matrix::zero(self.cols, self.row_len());
+        for i in 0..self.row_len() {
             for j in 0..self.cols {
                 matrix[j][i] = self[i][j];
             }
@@ -115,9 +118,9 @@ impl Mul<f64> for &Matrix {
 impl Mul for &Matrix {
     type Output = Matrix;
     fn mul(self, other: Self) -> Matrix {
-        assert_eq!(self.cols, other.rows());
-        let mut matrix = Matrix::zero(self.rows(), other.cols);
-        for i in 0..self.rows() {
+        assert_eq!(self.cols, other.row_len());
+        let mut matrix = Matrix::zero(self.row_len(), other.cols);
+        for i in 0..self.row_len() {
             for k in 0..self.cols {
                 for j in 0..other.cols {
                     matrix[i][j] += self[i][k] * other[k][j];
