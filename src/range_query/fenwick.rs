@@ -31,6 +31,9 @@ impl <T:Clone+Copy+Add<Output=T>+Sub<Output=T>> FenwickTree<T>{
     }
     /// Returns the summary of values between l and r-1.
     pub fn sum(&self, l:usize, r:usize) -> T {
+        if l>r {
+            panic!("Invalid range. l:{} > r:{}", l, r);
+        }
         return self.sum0(r) - self.sum0(l);
     }
     fn sum0(&self, mut idx: usize) -> T {
