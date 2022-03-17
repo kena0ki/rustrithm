@@ -4,6 +4,8 @@ mod arq_spec;
 pub use arq_spec::*;
 mod arq_min;
 pub use arq_min::*;
+mod arq_min_min;
+pub use arq_min_min::*;
 mod arq_max;
 pub use arq_max::*;
 mod arq_sum;
