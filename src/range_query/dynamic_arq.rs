@@ -169,7 +169,7 @@ impl<T: ArqSpec> DynamicArq<T> {
 
 /// An example of binary search to find the first position whose element is negative.
 /// The DynamicArq version works on trees of any size, not necessarily a power of two.
-pub fn first_negative(arq: &mut DynamicArq<super::specs::AssignMin>, view: ArqView) -> Option<i64> {
+pub fn first_negative(arq: &mut DynamicArq<super::specs::ArqMin>, view: ArqView) -> Option<i64> {
     let (p, s) = view;
     if s == 1 {
         Some(0).filter(|_| arq.nodes[p].val < 0)

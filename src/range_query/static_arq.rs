@@ -1,4 +1,5 @@
 //! Associative Range Query Tree
+
 use super::ArqSpec;
 
 /// Colloquially known as a "segtree" in the sport programming literature, it
@@ -145,7 +146,7 @@ impl<T: ArqSpec> StaticArq<T> {
 /// In this case, we use RMQ to locate the leftmost negative element.
 /// To ensure the existence of a valid root note (i == 1) from which to descend,
 /// the tree's size must be a power of two.
-pub fn first_negative(arq: &mut StaticArq<super::specs::AssignMin>) -> Option<usize> {
+pub fn first_negative(arq: &mut StaticArq<super::specs::ArqMin>) -> Option<usize> {
     assert!(arq.app.len().is_power_of_two());
     let mut p = 1;
     if arq.val[p] >= 0 {

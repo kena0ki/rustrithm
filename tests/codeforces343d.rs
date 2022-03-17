@@ -5,7 +5,7 @@
 use rustrithm::graph::Graph;
 use rustrithm::graph::Edge;
 use rustrithm::graph::AdjTo;
-use rustrithm::range_query::{specs::AssignSum, StaticArq};
+use rustrithm::range_query::{specs::ArqSum, StaticArq};
 use rustrithm::scanner::Scanner;
 use std::io;
 
@@ -75,7 +75,7 @@ fn solve<R: io::BufRead, W: io::Write>(scan: &mut Scanner<R>, out: &mut W) {
     let mut p = vec![0; n];
     dfs(&tree, 0, &mut l, &mut r, &mut p, &mut 0);
 
-    let mut arq = StaticArq::<AssignSum>::new(&vec![0; n + 1]);
+    let mut arq = StaticArq::<ArqSum>::new(&vec![0; n + 1]);
     let q = scan.token::<usize>();
     for _ in 0..q {
         let c = scan.token::<usize>();
