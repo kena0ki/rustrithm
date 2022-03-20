@@ -1,5 +1,6 @@
 use std::collections::{BinaryHeap, binary_heap::PeekMut};
 
+#[derive(Debug,Clone)]
 pub struct RemovableHeap<T> {
     pub heap: BinaryHeap<T>,
     pub del: BinaryHeap<T>,
