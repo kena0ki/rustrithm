@@ -20,9 +20,11 @@ impl ArqSpec for ArqMin {
     }
     fn compose(&f: &Self::F, _: &Self::F) -> Self::F {
         f
+        // (f+g)  // range update
     }
     fn apply(&f: &Self::F, _: &Self::S, _: i64) -> Self::S {
         f
+        // (f+a)*s // range update
     }
 }
 
