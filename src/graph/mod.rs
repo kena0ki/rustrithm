@@ -10,6 +10,7 @@ pub mod disjoint_set;
 pub mod topo;
 pub mod util;
 pub mod rerooting;
+pub mod lca;
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::cmp::Reverse;
