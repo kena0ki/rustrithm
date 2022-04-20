@@ -1,5 +1,5 @@
 
-/// Lagrange interpolation in O(N^) time.
+/// Lagrange interpolation in O(N^2) time.
 pub fn lagrange_interp(vx: &Vec<i64>, vy: &Vec<i64>, modulus: usize) -> Vec<i64> {
     let n = vx.len();
     let md = modulus as i64;
