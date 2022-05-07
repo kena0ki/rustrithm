@@ -1,8 +1,10 @@
 
 /// About usage, see mod test block below.
 pub trait EntitySpec<T>: Copy+Default {
-    fn add(&self, rhs: Self, v:usize, e:usize, t: &T) -> Self;
-    fn add_root(&self, v:usize, to: &Vec<(usize,usize)>, t: &T) -> Self;
+    /// Operation between two child nodes.
+    fn op(&self, rhs: Self, v:usize, e:usize, t: &T) -> Self;
+    /// Event for adding the root node after merge all child nodes.
+    fn add_root(&self, v:usize, to: &Vec<(usize,usize)>, parent: usize, t: &T) -> Self;
 }
 
 pub struct Rerooting<T, E:EntitySpec<T>> {
@@ -39,25 +41,25 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
             if p == v { continue; }
             let dp_v = Self::dfs1(v,u,adj,dp,t);
             dp[u][i] = dp_v;
-            res = res.add(dp_v,v,e,t);
+            res = res.op(dp_v,v,e,t);
         }
-        return res.add_root(u,&adj[u],t);
+        return res.add_root(u,&adj[u],p,t);
     }
     fn dfs2(u:usize, p:usize, adj: &Vec<Vec<(usize,usize)>>, dp:&mut Vec<Vec<E>>, t:&T
         , result: &mut Vec<E>) {
         let len = adj[u].len();
         let mut dp_l = vec![E::default();len+1];
         for (i,&(v,e)) in adj[u].iter().enumerate() {
-            dp_l[i+1] = dp_l[i].add(dp[u][i],v,e,t);
+            dp_l[i+1] = dp_l[i].op(dp[u][i],v,e,t);
         }
         let mut dp_r = vec![E::default();len+1];
         for (i,&(v,e)) in adj[u].iter().enumerate().rev() {
-            dp_r[i] = dp_r[i+1].add(dp[u][i],v,e,t);
+            dp_r[i] = dp_r[i+1].op(dp[u][i],v,e,t);
         }
         for (i,&(v,e)) in adj[u].iter().enumerate() {
             if p == v { continue; }
-            let dp_u = dp_l[i].add(dp_r[i+1],v,e,t);
-            let dp_u = dp_u.add_root(v,&adj[v],t);
+            let dp_u = dp_l[i].op(dp_r[i+1],v,e,t);
+            let dp_u = dp_u.add_root(u,&adj[u],v,t);
             for (i,&(w,_)) in adj[v].iter().enumerate() {
                 if w == u {
                     dp[v][i] = dp_u;
@@ -88,14 +90,14 @@ mod test {
         }
     }
     impl EntitySpec<FactM> for Entity {
-        fn add(&self, rhs: Self, _:usize, _e: usize, t:&FactM) -> Self {
+        fn op(&self, rhs: Self, _:usize, _e: usize, t:&FactM) -> Self {
             let newsize = self.size+rhs.size;
             let mut newval = self.val;
             newval *= rhs.val;
             newval *= t.combin(newsize, rhs.size);
             return Self { val:newval, size: newsize };
         }
-        fn add_root(&self, _v:usize, _adj: &Vec<(usize,usize)>, _:&FactM) -> Self {
+        fn add_root(&self, _v:usize, _adj: &Vec<(usize,usize)>,_:usize,_:&FactM) -> Self {
             return Self { val: self.val, size: self.size+1 };
         }
     }
