@@ -1,52 +1,72 @@
 
 /// About usage, see mod test block below.
-pub trait EntitySpec<T>: Copy {
-    fn identity() -> Self;
-    fn add(&self, rhs: Self, v:usize, adj: &Vec<Vec<usize>>, t: &T) -> Self;
-    fn sub(&self, rhs: Self, v:usize, adj: &Vec<Vec<usize>>, t: &T) -> Self;
-    fn add_root(&self, v:usize, adj: &Vec<Vec<usize>>, t: &T) -> Self;
+pub trait EntitySpec<T>: Copy+Default {
+    fn add(&self, rhs: Self, v:usize, e:usize, t: &T) -> Self;
+    fn add_root(&self, v:usize, to: &Vec<(usize,usize)>, t: &T) -> Self;
 }
 
 pub struct Rerooting<T, E:EntitySpec<T>> {
     pub t:T,
-    pub dp:Vec<E>,
-    pub adj:Vec<Vec<usize>>,
+    pub dp:Vec<Vec<E>>,
+    pub result:Vec<E>,
+    pub adj:Vec<Vec<(usize,usize)>>,
+    esize:usize,
 }
 
 impl <T, E:EntitySpec<T>> Rerooting<T, E> {
     pub fn new(n: usize, t:T) -> Self {
         Self {
             t,
-            dp:vec![E::identity();n],
+            dp:vec![Vec::new();n],
+            result:vec![E::default();n],
             adj:vec![Vec::with_capacity(n-1);n],
+            esize: 0,
         }
     }
     pub fn add_edge(&mut self, u:usize, v:usize) {
-        self.adj[u].push(v);
+        self.esize +=1;
+        self.adj[u].push((v,self.esize));
     }
     pub fn rerooting(&mut self) {
         Self::dfs1(0,usize::max_value(), &self.adj, &mut self.dp, &self.t);
-        Self::dfs2(0,usize::max_value(), &self.adj, &mut self.dp, &self.t);
+        Self::dfs2(0,usize::max_value(), &self.adj, &mut self.dp, &self.t, &mut self.result);
     }
-    fn dfs1(u:usize, p:usize, adj: &Vec<Vec<usize>>, dp:&mut Vec<E>, t: &T) {
-        let mut val = E::identity();
-        for &v in &adj[u] {
+    fn dfs1(u:usize, p:usize, adj: &Vec<Vec<(usize,usize)>>, dp:&mut Vec<Vec<E>>, t: &T)
+        -> E {
+        let mut res = E::default();
+        dp[u] = vec![E::default();adj[u].len()];
+        for (i,&(v,e)) in adj[u].iter().enumerate() {
             if p == v { continue; }
-            Self::dfs1(v,u,adj,dp,t);
-            let dp_v = dp[v].add_root(v,adj, t);
-            val = val.add(dp_v, v, adj, t);
+            let dp_v = Self::dfs1(v,u,adj,dp,t);
+            dp[u][i] = dp_v;
+            res = res.add(dp_v,v,e,t);
         }
-        dp[u] = val;
+        return res.add_root(u,&adj[u],t);
     }
-    fn dfs2(u:usize, p:usize, adj: &Vec<Vec<usize>>, dp:&mut Vec<E>, t:&T) {
-        for &v in &adj[u] {
-            if p == v { continue; }
-            let dp_v = dp[v].add_root(v,adj,t);
-            let dp_u = dp[u].sub(dp_v,v,adj,t);
-            let dp_u = dp_u.add_root(v,adj,t);
-            dp[v] = dp[v].add(dp_u,v,adj,t);
-            Self::dfs2(v,u,adj,dp,t);
+    fn dfs2(u:usize, p:usize, adj: &Vec<Vec<(usize,usize)>>, dp:&mut Vec<Vec<E>>, t:&T
+        , result: &mut Vec<E>) {
+        let len = adj[u].len();
+        let mut dp_l = vec![E::default();len+1];
+        for (i,&(v,e)) in adj[u].iter().enumerate() {
+            dp_l[i+1] = dp_l[i].add(dp[u][i],v,e,t);
         }
+        let mut dp_r = vec![E::default();len+1];
+        for (i,&(v,e)) in adj[u].iter().enumerate().rev() {
+            dp_r[i] = dp_r[i+1].add(dp[u][i],v,e,t);
+        }
+        for (i,&(v,e)) in adj[u].iter().enumerate() {
+            if p == v { continue; }
+            let dp_u = dp_l[i].add(dp_r[i+1],v,e,t);
+            let dp_u = dp_u.add_root(v,&adj[v],t);
+            for (i,&(w,_)) in adj[v].iter().enumerate() {
+                if w == u {
+                    dp[v][i] = dp_u;
+                    break;
+                }
+            }
+            Self::dfs2(v,u,adj,dp,t,result);
+        }
+        result[u] = dp_l[len];
     }
 }
 
@@ -62,25 +82,20 @@ mod test {
         val:ModU64<MOD1000000007>,
         size:u64,
     }
-    impl EntitySpec<FactM> for Entity {
-        fn identity() -> Self {
+    impl Default for Entity {
+        fn default() -> Self {
             return Self { val:ZERO_MOD1000000007+1, size:0 };
         }
-        fn add(&self, rhs: Self, _:usize, _adj: &Vec<Vec<usize>>, t:&FactM) -> Self {
+    }
+    impl EntitySpec<FactM> for Entity {
+        fn add(&self, rhs: Self, _:usize, _e: usize, t:&FactM) -> Self {
             let newsize = self.size+rhs.size;
             let mut newval = self.val;
             newval *= rhs.val;
             newval *= t.combin(newsize, rhs.size);
             return Self { val:newval, size: newsize };
         }
-        fn sub(&self, rhs: Self, _:usize, _adj: &Vec<Vec<usize>>, t:&FactM) -> Self {
-            let mut newval = self.val;
-            newval /= rhs.val;
-            newval /= t.combin(self.size, rhs.size);
-            let newsize = self.size-rhs.size;
-            return Self { val:newval, size: newsize };
-        }
-        fn add_root(&self, _v:usize, _adj: &Vec<Vec<usize>>, _:&FactM) -> Self {
+        fn add_root(&self, _v:usize, _adj: &Vec<(usize,usize)>, _:&FactM) -> Self {
             return Self { val: self.val, size: self.size+1 };
         }
     }
@@ -116,7 +131,7 @@ mod test {
             ,72
         ];
         for i in 0..n {
-            assert_eq!(expected[i], r.dp[i].val.val());
+            assert_eq!(expected[i], r.result[i].val.val());
         }
     }
 
