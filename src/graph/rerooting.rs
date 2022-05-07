@@ -1,14 +1,19 @@
 
+
 /// About usage, see mod test block below.
 pub trait EntitySpec<T>: Copy+Default {
     /// Operation between two child nodes.
     fn op(&self, rhs: Self, v:usize, e:usize, t: &T) -> Self;
-    /// Event triggered after DFS calls.
-    fn post_dfs(&self, _v:usize, _e:usize, _t: &T) -> Self {
+    /// Method for adding the edge after the corresponding dfs.
+    #[allow(unused_variables)]
+    fn add_edge(&self, v:usize, e:usize, t: &T) -> Self {
         return *self;
     }
-    /// Event for adding the root node after merge all child nodes.
-    fn add_root(&self, v:usize, to: &Vec<(usize,usize)>, parent: usize, t: &T) -> Self;
+    #[allow(unused_variables)]
+    /// Method for adding the root node after all child nodes is merged.
+    fn add_root(&self, v:usize, to: &Vec<(usize,usize)>, parent: usize, t: &T) -> Self {
+        return *self;
+    }
 }
 
 pub struct Rerooting<T, E:EntitySpec<T>> {
@@ -16,7 +21,6 @@ pub struct Rerooting<T, E:EntitySpec<T>> {
     pub dp:Vec<Vec<E>>,
     pub result:Vec<E>,
     pub adj:Vec<Vec<(usize,usize)>>,
-    esize:usize,
 }
 
 impl <T, E:EntitySpec<T>> Rerooting<T, E> {
@@ -26,12 +30,10 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
             dp:vec![Vec::new();n],
             result:vec![E::default();n],
             adj:vec![Vec::with_capacity(n-1);n],
-            esize: 0,
         }
     }
-    pub fn add_edge(&mut self, u:usize, v:usize) {
-        self.esize +=1;
-        self.adj[u].push((v,self.esize));
+    pub fn add_edge(&mut self, u:usize, v:usize,e:usize) {
+        self.adj[u].push((v,e));
     }
     pub fn rerooting(&mut self) {
         Self::dfs1(0,usize::max_value(), &self.adj, &mut self.dp, &self.t);
@@ -43,7 +45,8 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
         dp[u] = vec![E::default();adj[u].len()];
         for (i,&(v,e)) in adj[u].iter().enumerate() {
             if p == v { continue; }
-            let dp_v = Self::dfs1(v,u,adj,dp,t).post_dfs(v,e,t);
+            let dp_v = Self::dfs1(v,u,adj,dp,t);
+            let dp_v = dp_v.add_edge(v,e,t);
             dp[u][i] = dp_v;
             res = res.op(dp_v,v,e,t);
         }
@@ -64,6 +67,7 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
             if p == v { continue; }
             let dp_u = dp_l[i].op(dp_r[i+1],v,e,t);
             let dp_u = dp_u.add_root(u,&adj[u],v,t);
+            let dp_u = dp_u.add_edge(u,e,t);
             for (i,&(w,_)) in adj[v].iter().enumerate() {
                 if w == u {
                     dp[v][i] = dp_u;
@@ -75,6 +79,7 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
         result[u] = dp_l[len];
     }
 }
+
 
 #[cfg(test)]
 mod test {
@@ -121,9 +126,9 @@ mod test {
         ];
         let fact = Factorial::<MOD1000000007>::new(2*n);
         let mut r = Rerooting::<_,Entity>::new(n,fact);
-        for &(u,v) in &input {
-            r.add_edge(u-1,v-1);
-            r.add_edge(v-1,u-1);
+        for (i,&(u,v)) in input.iter().enumerate() {
+            r.add_edge(u-1,v-1,i);
+            r.add_edge(v-1,u-1,i);
         }
         r.rerooting();
         let expected = [
