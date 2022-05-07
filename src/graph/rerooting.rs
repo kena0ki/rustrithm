@@ -3,6 +3,10 @@
 pub trait EntitySpec<T>: Copy+Default {
     /// Operation between two child nodes.
     fn op(&self, rhs: Self, v:usize, e:usize, t: &T) -> Self;
+    /// Event triggered after DFS calls.
+    fn post_dfs(&self, _v:usize, _e:usize, _t: &T) -> Self {
+        return *self;
+    }
     /// Event for adding the root node after merge all child nodes.
     fn add_root(&self, v:usize, to: &Vec<(usize,usize)>, parent: usize, t: &T) -> Self;
 }
@@ -39,7 +43,7 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
         dp[u] = vec![E::default();adj[u].len()];
         for (i,&(v,e)) in adj[u].iter().enumerate() {
             if p == v { continue; }
-            let dp_v = Self::dfs1(v,u,adj,dp,t);
+            let dp_v = Self::dfs1(v,u,adj,dp,t).post_dfs(v,e,t);
             dp[u][i] = dp_v;
             res = res.op(dp_v,v,e,t);
         }
