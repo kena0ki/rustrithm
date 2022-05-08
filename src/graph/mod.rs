@@ -11,6 +11,7 @@ pub mod topo;
 pub mod util;
 pub mod rerooting;
 pub mod lca;
+pub mod dinic;
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::cmp::Reverse;

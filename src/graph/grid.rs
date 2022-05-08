@@ -1,7 +1,7 @@
 use super::Graph;
 use super::Edge;
 use super::WeightedEdge;
-use super::flow::FlowGraph;
+use super::dinic::Dinic;
 
 #[derive(Debug,Default,Clone,PartialEq,Eq)]
 pub struct Grid<T> {
@@ -97,27 +97,27 @@ impl Grid<Graph<WeightedEdge>> {
     }
 }
 
-impl Grid<FlowGraph> {
-    pub fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, cost: i64) {
-        self.graph.add_edge(u,v,cap,cost);
+impl Grid<Dinic> {
+    pub fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64) {
+        self.graph.add_edge(u,v,cap);
     }
-    pub fn add_flow_edge_rcap(&mut self, u: usize, v: usize, cap: i64, rcap: i64, cost: i64) {
-        self.graph.add_edge_rcap(u,v,cap,rcap,cost);
+    pub fn add_flow_edge_rcap(&mut self, u: usize, v: usize, cap: i64, rcap: i64) {
+        self.graph.add_edge_rcap(u,v,cap,rcap);
     }
-    pub fn construct_node<F>(&mut self, x: usize, y:usize, cap: i64, cost: i64,
+    pub fn construct_node<F>(&mut self, x: usize, y:usize, cap: i64,
         delta_x: &[i64], delta_y: &[i64], should_skip: F)
         where F: Fn(usize,usize) -> bool {
-        self.construct_node_rcap(x,y,cap,0,cost,delta_x,delta_y,should_skip);
+        self.construct_node_rcap(x,y,cap,0,delta_x,delta_y,should_skip);
     }
-    pub fn construct_node_rcap<F>(&mut self, x: usize, y:usize, cap: i64, rcap: i64, cost: i64,
+    pub fn construct_node_rcap<F>(&mut self, x: usize, y:usize, cap: i64, rcap: i64,
         delta_x: &[i64], delta_y: &[i64], should_skip: F)
         where F: Fn(usize,usize) -> bool {
         for (u,v) in self.edges_from_node(x,y,delta_x,delta_y,should_skip) {
-            self.graph.add_edge_rcap(u,v,cap,rcap,cost);
+            self.graph.add_edge_rcap(u,v,cap,rcap);
         }
     }
     pub fn debug_print(&self) {
-        for edge in &self.graph.graph.edges {
+        for edge in self.graph.edges_including_residual_edges() {
             println!("{:?}: {:?} -> {:?}", edge, self.node_to_coord(edge.u), self.node_to_coord(edge.v));
         }
     }
@@ -127,6 +127,8 @@ impl Grid<FlowGraph> {
 #[cfg(test)]
 mod test {
     use std::collections::VecDeque;
+
+    use crate::graph::dinic::Dinic;
 
     use super::*;
     #[test]
@@ -214,7 +216,7 @@ mod test {
         let y_size=3;
         let source=x_size*y_size;
         let sink=x_size*y_size+1;
-        let graph = FlowGraph::new(x_size*y_size+2,x_size*y_size*4);
+        let graph = Dinic::new(x_size*y_size+2,x_size*y_size*4);
         let mut grid = Grid::new(x_size,y_size, graph);
         let input = &mut [
             "#..".to_string(),
@@ -233,10 +235,10 @@ mod test {
                 }
                 let v = grid.coord_to_node(i,j);
                 if (i&1 == 0) && (j&1 == 0) {
-                    grid.add_flow_edge(source, v, 1, 0);
-                    grid.construct_node(i,j, 1, 0, delta_x,delta_y,should_skip);
+                    grid.add_flow_edge(source, v, 1);
+                    grid.construct_node(i,j, 1, delta_x,delta_y,should_skip);
                 } else {
-                    grid.add_flow_edge(v, sink, 1, 0);
+                    grid.add_flow_edge(v, sink, 1);
                 }
             }
         }
