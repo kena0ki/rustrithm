@@ -2,7 +2,7 @@
 pub mod fft;
 pub mod num;
 pub mod combin;
-pub mod factor;
+pub mod prime;
 pub mod crt;
 pub mod lagrange;
 

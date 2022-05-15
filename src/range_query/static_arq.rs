@@ -137,7 +137,7 @@ impl<T: ArqSpec> StaticArq<T> {
     }
 
     /// For debug
-    pub fn show(self: &Self) -> &[T::S] {
+    pub fn debug(self: &Self) -> &[T::S] {
         return &self.val[self.app.len()..];
     }
 }
