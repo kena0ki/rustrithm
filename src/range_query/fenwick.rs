@@ -2,16 +2,14 @@ use std::ops::{Add, Sub};
 
 #[derive(Debug)]
 pub struct FenwickTree<T>{
-    identity: T,
     n: usize,
     bit: Vec<T>,
 }
-impl <T:Clone+Copy+Add<Output=T>+Sub<Output=T>> FenwickTree<T>{
-    pub fn new(n: usize, identity: T) -> FenwickTree<T> {
+impl <T:Clone+Copy+Default+Add<Output=T>+Sub<Output=T>> FenwickTree<T>{
+    pub fn new(n: usize) -> FenwickTree<T> {
         return Self {
-            identity,
             n,
-            bit: vec![identity; n+1],
+            bit: vec![T::default(); n+1],
         };
     }
     /// Adds the value to the given index.
@@ -38,7 +36,7 @@ impl <T:Clone+Copy+Add<Output=T>+Sub<Output=T>> FenwickTree<T>{
     }
     fn sum0(&self, mut idx: usize) -> T {
         //idx+=1;
-        let mut ret = self.identity;
+        let mut ret = T::default();
         loop {
             if idx<=0 {
                 break;
@@ -56,7 +54,7 @@ mod test {
     use super::*;
     #[test]
     fn test_fenwck() {
-        let mut bit = FenwickTree::new(10,0);
+        let mut bit = FenwickTree::new(10);
         bit.add(4,3);
         bit.add(5,3);
         bit.add(6,3);
