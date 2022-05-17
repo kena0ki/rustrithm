@@ -83,30 +83,34 @@ impl <T, E:EntitySpec<T>> Rerooting<T, E> {
 
 #[cfg(test)]
 mod test {
-    use crate::math::{combin::Factorial, num::{ModU64, ZERO_MOD1000000007, MOD1000000007}};
+    use crate::math::combi::Combi;
     use super::*;
 
-    type FactM = Factorial<MOD1000000007>;
+    const MOD:usize = 1000000007;
+
+    type CombiM = Combi<MOD>;
 
     #[derive(Clone,Copy)]
     pub struct Entity {
-        val:ModU64<MOD1000000007>,
-        size:u64,
+        val:usize,
+        size:usize,
     }
     impl Default for Entity {
         fn default() -> Self {
-            return Self { val:ZERO_MOD1000000007+1, size:0 };
+            return Self { val:1, size:0 };
         }
     }
-    impl EntitySpec<FactM> for Entity {
-        fn op(&self, rhs: Self, _:usize, _e: usize, t:&FactM) -> Self {
+    impl EntitySpec<CombiM> for Entity {
+        fn op(&self, rhs: Self, _:usize, _e: usize, t:&CombiM) -> Self {
             let newsize = self.size+rhs.size;
             let mut newval = self.val;
             newval *= rhs.val;
-            newval *= t.combin(newsize, rhs.size);
+            newval %= MOD;
+            newval *= t.kcombi(newsize, rhs.size);
+            newval %= MOD;
             return Self { val:newval, size: newsize };
         }
-        fn add_root(&self, _v:usize, _adj: &Vec<(usize,usize)>,_:usize,_:&FactM) -> Self {
+        fn add_root(&self, _v:usize, _adj: &Vec<(usize,usize)>,_:usize,_:&CombiM) -> Self {
             return Self { val: self.val, size: self.size+1 };
         }
     }
@@ -124,7 +128,7 @@ mod test {
             (6,7),
             (6,8),
         ];
-        let fact = Factorial::<MOD1000000007>::new(2*n);
+        let fact = Combi::<1000000007>::new(2*n);
         let mut r = Rerooting::<_,Entity>::new(n,fact);
         for (i,&(u,v)) in input.iter().enumerate() {
             r.add_edge(u-1,v-1,i);
@@ -142,7 +146,7 @@ mod test {
             ,72
         ];
         for i in 0..n {
-            assert_eq!(expected[i], r.result[i].val.val());
+            assert_eq!(expected[i], r.result[i].val);
         }
     }
 

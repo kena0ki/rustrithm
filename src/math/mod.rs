@@ -1,7 +1,8 @@
 //! Number-theoretic utilities for contest problems.
 pub mod fft;
 pub mod num;
-pub mod combin;
+pub mod combi;
+pub mod permutation;
 pub mod prime;
 pub mod crt;
 pub mod lagrange;
