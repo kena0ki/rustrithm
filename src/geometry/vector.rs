@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, ops::{Add, Sub}};
+use std::{cmp::Ordering, ops::{Add, Sub, Mul, Div}};
 
 
 #[derive(Debug,Default,Clone,Copy)]
@@ -39,6 +39,13 @@ impl Vector {
         let c = self.cross(*rhs);
         return 0f64.partial_cmp(&c);
     }
+    /// Adds the angle and multiplies the length of this vector using another vector
+    /// as it is done in complex plane.
+    pub fn rotate_and_scale(&self, rhs: Self) -> Self {
+        let x = self.x*rhs.x - self.y*rhs.y;
+        let y = self.x*rhs.y + self.y*rhs.x;
+        return Self { x, y };
+    }
 }
 
 impl Add for Vector {
@@ -51,6 +58,19 @@ impl Sub for Vector {
     type Output=Self;
     fn sub(self, rhs: Self) -> Self {
         Self { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl Mul<f64> for Vector {
+    type Output=Self;
+    fn mul(self, rhs: f64) -> Self {
+        Self { x: self.x * rhs, y: self.y * rhs }
+    }
+}
+impl Div<f64> for Vector {
+    type Output=Self;
+    fn div(self, rhs: f64) -> Self {
+        Self { x: self.x / rhs, y: self.y / rhs }
     }
 }
 
