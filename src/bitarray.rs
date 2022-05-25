@@ -218,12 +218,20 @@ impl Shr<usize> for &BitArray {
             }
             new.bits[self.num_arr-shift-1] = self.bits[self.num_arr-1] >> offset;
         }
-        new.bits[self.num_arr-(shift.max(1))..self.num_arr-1].fill(0);
+        for i in self.num_arr-(shift.max(1))..self.num_arr-1 {
+            new.bits[i] = 0;
+        }
+        //new.bits[self.num_arr-(shift.max(1))..self.num_arr-1].fill(0);
+
 
         return new;
     }
 }
 
+// Commented out since these methods consume self.
+// BitArray implements Copy trait,
+// so these methods consuming self are not suitable.
+//
 //impl Shl<usize> for BitArray {
 //    type Output = BitArray;
 //    fn shl(self, rhs: usize) -> Self::Output {
