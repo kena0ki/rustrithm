@@ -27,31 +27,42 @@ impl Prime {
         return Self {n, sieve, primes};
     }
     pub fn factorize(&self, mut x: usize) -> BTreeMap<usize,usize> {
-        if x < 2 || x>self.n {
-            panic!("x should be 2 <= x <= n.");
+        if x < 2 || x>self.n*self.n {
+            panic!("x should be 2 <= x <= n*n, but it was {}", x);
         }
         let mut facts = BTreeMap::new();
-        while x > 1 {
-            *facts.entry(self.sieve[x]).or_default() +=1;
-            x = x / self.sieve[x];
+        if x<=self.n {
+            while x > 1 {
+                *facts.entry(self.sieve[x]).or_default() +=1;
+                x = x / self.sieve[x];
+            }
+        } else {
+            for &p in &self.primes {
+                while x%p == 0 {
+                    *facts.entry(p).or_default()+=1;
+                    x/=p;
+                }
+            }
+            if x>1 {
+                facts.insert(x,1);
+            }
         }
         return facts;
     }
-    pub fn factorize_by_sqroot(&self, mut x: usize) -> BTreeMap<usize, usize> {
-        let mut facts = BTreeMap::new();
+
+    pub fn is_prime(&self, x:usize) -> bool {
         if x < 2 || x>self.n*self.n {
-            panic!("x should be 2 <= x <= n*n.");
+            panic!("x should be 2 <= x <= n*n, but it was {}", x);
+        }
+        if x<=self.n {
+            return self.sieve[x]==x;
         }
         for &p in &self.primes {
-            while x%p == 0 {
-                *facts.entry(p).or_default()+=1;
-                x/=p;
+            if x%p == 0 {
+                return false;
             }
         }
-        if x>1 {
-            facts.insert(x,1);
-        }
-        return facts;
+        return true;
     }
 }
 
@@ -60,16 +71,21 @@ mod test {
     use super::*;
     #[test]
     fn test_prime() {
-        let fct = Prime::new(20);
-        assert_eq!(vec![2,3,5,7,11,13,17,19], fct.primes);
+        let prm = Prime::new(20);
+        assert_eq!(vec![2,3,5,7,11,13,17,19], prm.primes);
         let expect = BTreeMap::from([(2,2),(5,1)]);
-        assert_eq!(expect, fct.factorize(20));
+        assert_eq!(expect, prm.factorize(20));
         let expect = BTreeMap::from([(2,1),(3,2)]);
-        assert_eq!(expect, fct.factorize(18));
+        assert_eq!(expect, prm.factorize(18));
         let expect = BTreeMap::from([(2,4),(5,2)]);
-        assert_eq!(expect, fct.factorize_by_sqroot(400));
+        assert_eq!(expect, prm.factorize(400));
         let expect = BTreeMap::from([(3,2),(43,1)]);
-        assert_eq!(expect, fct.factorize_by_sqroot(387));
+        assert_eq!(expect, prm.factorize(387));
+
+        assert_eq!(true, prm.is_prime(19));
+        assert_eq!(false, prm.is_prime(20));
+        assert_eq!(true, prm.is_prime(397));
+        assert_eq!(false, prm.is_prime(400));
     }
 }
 
