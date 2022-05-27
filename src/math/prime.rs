@@ -7,6 +7,8 @@ pub struct Prime {
 }
 
 impl Prime {
+    /// Initializes Prime.
+    /// O(NlogN)
     pub fn new(n:usize) -> Self{
         let mut sieve = vec![0;n+1];  // i=0,1 elements are not used.
         let mut primes = Vec::new();
@@ -26,6 +28,10 @@ impl Prime {
         }
         return Self {n, sieve, primes};
     }
+    /// Factorizes the number.
+    /// O(1) if 2 <= x <= n.
+    /// O(M) if n < x <= n*n where M is the number of primes.
+    /// panic otherwise.
     pub fn factorize(&self, mut x: usize) -> BTreeMap<usize,usize> {
         if x < 2 || x>self.n*self.n {
             panic!("x should be 2 <= x <= n*n, but it was {}", x);
@@ -49,7 +55,10 @@ impl Prime {
         }
         return facts;
     }
-
+    /// Tests whether the number is prime.
+    /// O(1) if 2 <= x <= n.
+    /// O(M) if n < x <= n*n where M is the number of primes.
+    /// panic otherwise.
     pub fn is_prime(&self, x:usize) -> bool {
         if x < 2 || x>self.n*self.n {
             panic!("x should be 2 <= x <= n*n, but it was {}", x);
