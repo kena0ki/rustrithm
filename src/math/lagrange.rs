@@ -1,6 +1,9 @@
 
-/// Lagrange interpolation in O(N^2) time.
-pub fn lagrange_interp(vx: &Vec<i64>, vy: &Vec<i64>, modulus: usize) -> Vec<i64> {
+/// Calculates Lagrange polynomial in O(N^2) time.
+/// For the given data set (x_0,y_0) ... (x_n,y_n),
+/// returns the array of coefficients b_i where f(x)=b_n-1*x^n-1 ... + b_1*x + b_0
+// Example: https://atcoder.jp/contests/abc137/submissions/32074247
+pub fn lagrange_polynomial(vx: &Vec<i64>, vy: &Vec<i64>, modulus: usize) -> Vec<i64> {
     let n = vx.len();
     let md = modulus as i64;
     let vx = vx.iter().map(|x| (x%md+md)%md).collect::<Vec<_>>();
