@@ -1,20 +1,23 @@
 use std::collections::{BTreeMap,BTreeSet};
-pub fn coord_cmp<T:Ord+Clone+Copy>(a: &Vec<T>) -> (Vec<usize>, usize) {
+pub fn coord_cmp<T:Ord+Clone+Copy>(a: &Vec<T>)
+    -> (Vec<usize>, BTreeMap<T,usize>, BTreeMap<usize,T>, usize) {
     let mut set = BTreeSet::<T>::new();
     for i in 0..a.len() {
         set.insert(a[i]);
     }
     let mut size = 0;
-    let mut mem = BTreeMap::<T,usize>::new();
-    for key in set {
-        mem.insert(key, size);
+    let mut to_id = BTreeMap::<T,usize>::new();
+    let mut to_val = BTreeMap::<usize,T>::new();
+    for val in set {
+        to_id.insert(val, size);
+        to_val.insert(size, val);
         size+=1;
     }
-    let mut ret = vec![0; a.len()];
+    let mut compressed = vec![0; a.len()];
     for i in 0..a.len() {
-        ret[i] = *mem.get(&a[i]).unwrap();
+        compressed[i] = *to_id.get(&a[i]).unwrap();
     }
-    return (ret, size);
+    return (compressed, to_id, to_val, size);
 }
 
 #[cfg(test)]
