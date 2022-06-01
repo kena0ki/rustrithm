@@ -31,18 +31,8 @@ impl <T:Ord+Copy> Median<T> {
             self.right.push(Reverse(l));
         }
     }
-    pub fn pop(&mut self) -> Option<T> {
-        let val = self.left.pop();
-        let len_l = self.left.len();
-        let len_r = self.right.len();
-        if len_l - len_r >= 2 {
-            let l = self.left.pop().unwrap();
-            self.right.push(Reverse(l));
-        }
-        return val;
-    }
     pub fn median(&self) -> Option<(T,T)> {
-        if self.left.len() ==0 {
+        if self.left.len() == 0 {
             return None;
         } else if self.left.len() == self.right.len() {
             let l =  self.left.peek().copied();
