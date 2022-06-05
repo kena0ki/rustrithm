@@ -30,6 +30,12 @@ impl Vector {
         else if self.x < 0f64 && self.y<=0f64 { return 3 }
         else { return 4 }
     }
+    pub fn cmp_angle(&self, rhs: &Self, eps:f64) -> Ordering {
+        if rhs.x.is_nan() || rhs.y.is_nan() {
+            panic!("x and y shouldn't be NaN");
+        }
+        return self.partial_cmp_angle(rhs,eps).unwrap();
+    }
     pub fn partial_cmp_angle(&self, rhs: &Self, eps:f64) -> Option<Ordering> {
         let o1 = self.orth(eps);
         let o2 = rhs.orth(eps);
@@ -39,8 +45,8 @@ impl Vector {
         let c = self.cross(*rhs);
         return 0f64.partial_cmp(&c);
     }
-    /// Adds the angle and multiplies the length of this vector using another vector
-    /// as it is done in complex plane.
+    /// Adds the angle and multiplies the length using another vector
+    /// as if it is a complex number in complex plane.
     pub fn rotate_and_scale(&self, rhs: Self) -> Self {
         let x = self.x*rhs.x - self.y*rhs.y;
         let y = self.x*rhs.y + self.y*rhs.x;
