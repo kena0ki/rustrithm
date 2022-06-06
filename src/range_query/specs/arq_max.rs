@@ -8,13 +8,17 @@ impl ArqSpec for ArqMax {
         a.max(b)
     }
     fn identity() -> Self::S {
-        0
+        i64::min_value()
     }
-    fn compose(&f: &Self::F, _: &Self::F) -> Self::F {
+    fn compose(&f: &Self::F, _g: &Self::F) -> Self::F {
         f
+        // update max value
+        //f.max(*g)
     }
-    fn apply(&f: &Self::F, _: &Self::S, _: i64) -> Self::S {
+    fn apply(&f: &Self::F, _a: &Self::S, _: i64) -> Self::S {
         f
+        // update max value
+        //f.max(*a)
     }
 }
 

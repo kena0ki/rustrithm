@@ -18,13 +18,15 @@ impl ArqSpec for ArqMin {
     fn identity() -> Self::S {
         i64::max_value()
     }
-    fn compose(&f: &Self::F, _: &Self::F) -> Self::F {
+    fn compose(&f: &Self::F, _g: &Self::F) -> Self::F {
         f
         // (f+g)  // range update
+        // f.min(*g) // update min value
     }
-    fn apply(&f: &Self::F, _: &Self::S, _: i64) -> Self::S {
+    fn apply(&f: &Self::F, _a: &Self::S, _: i64) -> Self::S {
         f
         // (f+a)*s // range update
+        // f.min(*a) // update min value
     }
 }
 
