@@ -7,16 +7,15 @@ pub struct Lca {
 
 impl Lca {
     pub fn new(n:usize) -> Self {
-        let mut m = 1;
-        let mut x=n;
-        while x > 0 {
-            x/=2;
-            m+=1;
-        }
-        return Self { dp: vec![vec![0;m];n], dist: vec![0;n], n, m };
+        let mut m = 0;
+        while (n>>m) > 0 { m+=1; }
+        return Self { dp: vec![vec![n;m];n+1], dist: vec![0;n], n, m };
     }
     pub fn init(&mut self, adj: &Vec<Vec<usize>>) {
-        self.dfs(adj,0,0);
+        self.dfs(adj,0,self.n);
+    }
+    pub fn init_from(&mut self, adj: &Vec<Vec<usize>>, root:usize) {
+        self.dfs(adj,root,self.n);
     }
     fn dfs(&mut self, adj: &Vec<Vec<usize>>, u: usize, p: usize) {
         self.dp[u][0] = p;
@@ -30,7 +29,7 @@ impl Lca {
         }
     }
     pub fn lca(&self, mut u:usize, mut v:usize) -> usize {
-        if u>v { std::mem::swap(&mut u, &mut v) }
+        if self.dist[u]>self.dist[v] { std::mem::swap(&mut u, &mut v) }
         let d = self.dist[v]-self.dist[u];
         for i in 0..self.m {
             if d>>i&1 == 1 {
@@ -63,6 +62,7 @@ mod test {
     fn test_lca() {
         let tree = vec![
             (0,1),
+            (0,18),
             (1,2),
             (1,3),
             (2,4),
@@ -94,6 +94,7 @@ mod test {
         assert_eq!(6,lca.lca(8,12));
         assert_eq!(1,lca.lca(1,5));
         assert_eq!(0,lca.lca(0,0));
+        assert_eq!(0,lca.lca(17,18));
 
         assert_eq!(6,lca.len(17,12));
         assert_eq!(3,lca.len(8,12));
