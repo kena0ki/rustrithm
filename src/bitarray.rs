@@ -229,8 +229,8 @@ impl Shr<usize> for &BitArray {
 }
 
 // Commented out since these methods consume self.
-// BitArray implements Copy trait,
-// so these methods consuming self are not suitable.
+// BitArray does not implement Copy trait,
+// so these methods consuming self are not suitable for this struct.
 //
 //impl Shl<usize> for BitArray {
 //    type Output = BitArray;
