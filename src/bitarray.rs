@@ -8,7 +8,7 @@ use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, S
 pub struct BitArray {
     bits: Vec<u128>,
     num_bits: usize,
-    num_arr: usize,
+    arr_size: usize,
 }
 
 impl BitArray {
@@ -16,11 +16,11 @@ impl BitArray {
 
     /// Initializes a bit array.
     pub fn new(size: usize) -> Self {
-        let num_arr = size/Self::BITS_PER_UNIT + 1;
+        let arr_size = size/Self::BITS_PER_UNIT + 1;
         return Self{
-            bits: vec![0;num_arr],
+            bits: vec![0;arr_size],
             num_bits: size,
-            num_arr,
+            arr_size,
         };
     }
 
@@ -33,7 +33,7 @@ impl BitArray {
     pub fn from_u8slice_with_size(bits: &[u8], size: usize) -> Self {
         Self::panic_if_out_of_input_range(size, bits.len());
         let mut new = Self::new(size);
-        for i in 0..new.num_arr {
+        for i in 0..new.arr_size {
             let start = i*Self::BITS_PER_UNIT;
             let end = bits.len().min(start+Self::BITS_PER_UNIT);
             for j in start..end {
@@ -49,15 +49,15 @@ impl BitArray {
     }
 
     /// Sets the specified bit to true. Index is zero-based.
-    pub fn set_bit_at(&mut self, at: usize) {
+    pub fn set(&mut self, at: usize) {
         self.panic_if_out_of_range(at);
         self.bits[at/Self::BITS_PER_UNIT] |= 1<<(at%Self::BITS_PER_UNIT);
     }
 
     /// Unsets the specified bit to false. Index is zero-based.
-    pub fn unset_bit_at(&mut self, at: usize) {
+    pub fn unset(&mut self, at: usize) {
         self.panic_if_out_of_range(at);
-        self.bits[at/Self::BITS_PER_UNIT] &= 0<<(at%Self::BITS_PER_UNIT);
+        self.bits[at/Self::BITS_PER_UNIT] ^= 1<<(at%Self::BITS_PER_UNIT);
     }
 
     /// Sets the bits in the range from the offset to the offset + 128 using the u128 number. Index is zero-based.
@@ -77,7 +77,7 @@ impl BitArray {
     }
 
     /// Test whether the specified bit is true.
-    pub fn test_bit(&self, at: usize) -> bool {
+    pub fn test(&self, at: usize) -> bool {
         self.panic_if_out_of_range(at);
         return self.bits[at/Self::BITS_PER_UNIT] & (1<<(at%Self::BITS_PER_UNIT)) > 0;
     }
@@ -95,7 +95,7 @@ impl BitArray {
     /// Converts the bit array to a binary representative string.
     pub fn to_string(&self) -> String {
         let mut s = String::with_capacity(self.num_bits);
-        let b = self.bits[self.num_arr-1];
+        let b = self.bits[self.arr_size-1];
         let sub = Self::BITS_PER_UNIT - self.num_bits%Self::BITS_PER_UNIT;
         s.push_str(&format!("{:0128b}", b).as_str()[sub..]);
         for b in self.bits.iter().rev().skip(1) {
@@ -105,21 +105,11 @@ impl BitArray {
     }
 }
 
-impl BitAnd for BitArray {
-    type Output = BitArray;
-    fn bitand(self, rhs: Self) -> Self::Output {
-        let mut new = BitArray::new(self.num_bits);
-        for i in 0..self.num_arr {
-            new.bits[i] = self.bits[i] & rhs.bits[i];
-        }
-        return new;
-    }
-}
 impl BitAnd for &BitArray {
     type Output = BitArray;
     fn bitand(self, rhs: Self) -> Self::Output {
         let mut new = BitArray::new(self.num_bits);
-        for i in 0..self.num_arr {
+        for i in 0..self.arr_size.min(rhs.arr_size) {
             new.bits[i] = self.bits[i] & rhs.bits[i];
         }
         return new;
@@ -135,7 +125,7 @@ impl BitOr for &BitArray {
     type Output = BitArray;
     fn bitor(self, rhs: Self) -> Self::Output {
         let mut new = BitArray::new(self.num_bits);
-        for i in 0..self.num_arr {
+        for i in 0..self.arr_size.min(rhs.arr_size) {
             new.bits[i] = self.bits[i] | rhs.bits[i];
         }
         return new;
@@ -151,7 +141,7 @@ impl BitXor for &BitArray {
     type Output = BitArray;
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut new = BitArray::new(self.num_bits);
-        for i in 0..self.num_arr {
+        for i in 0..self.arr_size.min(rhs.arr_size) {
             new.bits[i] = self.bits[i] ^ rhs.bits[i];
         }
         return new;
@@ -176,20 +166,25 @@ impl Shl<usize> for &BitArray {
         let offset = rhs % Self::Output::BITS_PER_UNIT;
         let sub_offset = Self::Output::BITS_PER_UNIT - offset;
 
+        if shift>=self.arr_size {
+            return new;
+        }
+
         if offset == 0 {
-            for i in (shift..self.num_arr).rev() {
+            for i in (shift..self.arr_size).rev() {
                 new.bits[i] = self.bits[i - shift];
             }
         } else {
-            for i in (shift+1..self.num_arr).rev() {
+            for i in (shift+1..self.arr_size).rev() {
                 new.bits[i] = (self.bits[i - shift] << offset)
                      | (self.bits[i - shift - 1] >> sub_offset);
             }
             new.bits[shift] = self.bits[0] << offset;
         }
+
         //new.bits[0..shift].fill(0);
         let unused_range = Self::Output::BITS_PER_UNIT - self.num_bits%Self::Output::BITS_PER_UNIT;
-        new.bits[self.num_arr-1] &= !0 >> unused_range;
+        new.bits[self.arr_size-1] &= !0 >> unused_range;
 
         return new;
     }
@@ -207,21 +202,26 @@ impl Shr<usize> for &BitArray {
         let offset = rhs % Self::Output::BITS_PER_UNIT;
         let sub_offset = Self::Output::BITS_PER_UNIT - offset;
 
+        if shift>=self.arr_size {
+            return new;
+        }
+
         if offset == 0 {
-            for i in shift..self.num_arr {
+            for i in shift..self.arr_size {
                 new.bits[i-shift] = self.bits[i];
             }
         } else {
-            for i in shift..self.num_arr-1 {
+            for i in shift..self.arr_size-1 {
                 new.bits[i-shift] = (self.bits[i + 1] << sub_offset)
                      | (self.bits[i] >> offset);
             }
-            new.bits[self.num_arr-shift-1] = self.bits[self.num_arr-1] >> offset;
+            new.bits[self.arr_size-shift-1] = self.bits[self.arr_size-1] >> offset;
         }
-        for i in self.num_arr-(shift.max(1))..self.num_arr-1 {
+
+        for i in self.arr_size-(shift.max(1))..self.arr_size-1 {
             new.bits[i] = 0;
         }
-        //new.bits[self.num_arr-(shift.max(1))..self.num_arr-1].fill(0);
+        //new.bits[self.arr_size-(shift.max(1))..self.arr_size-1].fill(0);
 
 
         return new;
@@ -284,6 +284,16 @@ impl From<&[u8]> for BitArray {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn barr_set() {
+        let mut ba = BitArray::new(4);
+        ba.set(3);
+        ba.set(1);
+        assert_eq!("1010",ba.to_string());
+        ba.unset(3);
+        assert_eq!("0010",ba.to_string());
+    }
 
     #[test]
     fn barr_bitor() {
