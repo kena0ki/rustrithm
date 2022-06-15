@@ -1,14 +1,17 @@
 use std::{collections::BinaryHeap, cmp::Reverse};
 
 //https://atcoder.jp/contests/abc127/submissions/32149254
+/// `Median` is a data structure that can be used to find the median of a stream of numbers.
 pub struct Median<T> {
     left: BinaryHeap<T>,
     right: BinaryHeap<Reverse<T>>,
 }
 impl <T:Ord+Copy> Median<T> {
+    /// Creates a new `Median` structure.
     pub fn new() -> Self {
         return Self { left: BinaryHeap::new(), right: BinaryHeap::new() };
     }
+    /// Adds a new number to the `Median` structure.
     pub fn push(&mut self, val: T) {
         let l = self.left.peek();
         if l.is_none() {
@@ -31,6 +34,7 @@ impl <T:Ord+Copy> Median<T> {
             self.right.push(Reverse(l));
         }
     }
+    /// Returns the median of the numbers that have been pushed to the `Median` structure.
     pub fn median(&self) -> Option<(T,T)> {
         if self.left.len() == 0 {
             return None;
@@ -46,3 +50,19 @@ impl <T:Ord+Copy> Median<T> {
     }
 }
 
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_median() {
+        let mut m = super::Median::new();
+        m.push(1);
+        m.push(3);
+        m.push(5);
+        let med = m.median();
+        assert_eq!(med, Some((3,3)));
+        m.push(6);
+        let med = m.median();
+        assert_eq!(med, Some((3,5)));
+    }
+
+}
