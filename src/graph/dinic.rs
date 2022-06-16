@@ -1,5 +1,5 @@
 //! Maximum flows, matchings, and minimum cuts.
-use std::{collections::{btree_set::IntoIter, HashMap, BTreeSet}, iter::StepBy};
+use std::iter::StepBy;
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
 pub struct FlowEdge {
@@ -8,25 +8,10 @@ pub struct FlowEdge {
     pub cap: i64,
     pub flow: i64,
 }
-#[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
-pub struct AdjTo {
-    pub edge_id: usize,
-    pub v: usize,
-}
-impl Ord for AdjTo {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        return self.edge_id.cmp(&other.edge_id);
-    }
-}
-impl PartialOrd for AdjTo {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
 
 /// Implementation of Dinic's algorithm
 pub struct Dinic {
-    adj: HashMap<usize,BTreeSet<AdjTo>>, // two edges for an undirected edge
+    adj: Vec<Vec<(usize,usize)>>, // two edges for an undirected edge
     num_vert: usize,
     edges: Vec<FlowEdge>, // one edge for an undirected edge
     distance: Vec<i64>,
@@ -34,14 +19,14 @@ pub struct Dinic {
 
 impl Dinic {
     /// An upper limit to the flow.
-    const INF: i64 = i64::MAX;
+    const INF: i64 = i64::max_value();
 
     /// Initializes an flow network with vmax vertices and no edges.
     pub fn new(vmax: usize, emax_hint: usize) -> Self {
         Self {
-            adj: HashMap::with_capacity(emax_hint),
+            adj: vec![Vec::with_capacity(2*emax_hint/vmax);vmax],
             num_vert: vmax,
-            edges: Vec::with_capacity(emax_hint),
+            edges: Vec::with_capacity(2*emax_hint),
             distance: vec![],
         }
     }
@@ -56,18 +41,13 @@ impl Dinic {
         return self.edges.len();
     }
 
-    /// Gets vertex u's adjacency list.
-    fn adj_list(&self, u: usize) -> BTreeSet<AdjTo> {
-        return self.adj.get(&u).unwrap_or(&BTreeSet::new()).to_owned();
-    }
-
     fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, rcap: i64) {
-        let edge_id = self.num_e();
+        let e = self.num_e();
         // add an edge
-        self.adj.entry(u).or_default().insert(AdjTo{ edge_id, v });
+        self.adj[u].push((e,v));
         self.edges.push(FlowEdge { u, v, cap, flow:0 });
         // add a residual edge
-        self.adj.entry(v).or_default().insert(AdjTo{ edge_id: edge_id+1, v:u });
+        self.adj[v].push((e+1,u));
         self.edges.push(FlowEdge { v:u, u:v, cap:rcap, flow:0 });
     }
 
@@ -86,7 +66,7 @@ impl Dinic {
         return self.edges.iter().step_by(2);
     }
 
-    /// Get an nth edge. The specified index corresponds to the order of adding edges.
+    /// Get an nth edge. The index corresponds to the order of added edges.
     pub fn get_edge(&self, n: usize) -> &FlowEdge{
         return &self.edges[n*2];
     }
@@ -96,7 +76,7 @@ impl Dinic {
         return &*self.edges;
     }
 
-    /// clear flow value once they are calculated.
+    /// Clear flow values have been calculated.
     pub fn clear_flow(&mut self) {
         for e in self.edges.iter_mut() {
             e.flow = 0;
@@ -123,11 +103,12 @@ impl Dinic {
             if self.distance[t] == Self::INF {
                 break;
             }
-            // Keep track of adjacency lists to avoid revisiting blocked edges.
-            let mut adj_iters = (0..self.num_v())
-                .map(|u| self.adj_list(u).into_iter().peekable())
-                .collect::<Vec<_>>();
-            max_flow += self.dinic_augment(s, t, Self::INF, &mut adj_iters);
+            let mut from = vec![0;self.num_v()];
+            let mut f=Self::INF;
+            while f>0 {
+                f = self.dinic_augment(s, t, Self::INF, &mut from);
+                max_flow+=f;
+            }
         }
         max_flow
     }
@@ -139,7 +120,7 @@ impl Dinic {
         self.distance[s] = 0;
         q.push_back(s);
         while let Some(u) = q.pop_front() {
-            for AdjTo{edge_id:e, v} in self.adj_list(u) {
+            for &(e, v) in &self.adj[u] {
                 if self.distance[v] == Self::INF && self.edges[e].flow < self.edges[e].cap {
                     self.distance[v] = self.distance[u] + 1;
                     q.push_back(v);
@@ -154,21 +135,23 @@ impl Dinic {
         u: usize,
         t: usize,
         flow_input: i64,
-        adj: &mut [::std::iter::Peekable<IntoIter<AdjTo>>],
+        from: &mut Vec<usize>,
     ) -> i64 {
         if u == t {
             return flow_input;
         }
         let mut flow_used = 0;
 
-        while let Some(&AdjTo{edge_id:e, v}) = adj[u].peek() {
+        let num_edges = self.adj[u].len();
+        for i in from[u]..num_edges {
+            let (e,v) = self.adj[u][i];
             let edge = &self.edges[e];
             let rem_cap = (edge.cap - edge.flow).min(flow_input - flow_used);// min(remaining capacity, remaining flow)
-            if rem_cap > 0 && self.distance[v] == self.distance[u] + 1 {
+            if rem_cap > 0 && self.distance[v] == self.distance[u] + 1{
                 // calculates maximum flow in a subtree (max_flow).
                 // max_flow never exceeds the remaining flow since rem_cap is not greater than
                 // the remaining flow.
-                let max_flow = self.dinic_augment(v, t, rem_cap, adj);
+                let max_flow = self.dinic_augment(v, t, rem_cap, from);
                 self.augment_path(e, max_flow);
                 flow_used += max_flow; // add the maximum flow in a subtree
                 if flow_used == flow_input { // until the summary reaches to the input flow.
@@ -176,7 +159,7 @@ impl Dinic {
                 }
             }
             // The current edge is either saturated or blocked.
-            adj[u].next();
+            from[u]+=1;
         }
         flow_used
     }
