@@ -191,10 +191,12 @@ impl Dinic {
             .collect()
     }
 
-    pub fn debug_print(&self, out: &mut impl ::std::io::Write, residual: bool) {
-        let step = if residual { 1 } else { 2 };
-        for e in self.edges.iter().step_by(step) {
-            writeln!(out, "{:?}", e).ok();
+    pub fn debug_print(&self, residual: bool) {
+        if cfg!(debug_assertions) {
+            let step = if residual { 1 } else { 2 };
+            for e in self.edges.iter().step_by(step) {
+                println!("{:?}", e);
+            }
         }
     }
 }
