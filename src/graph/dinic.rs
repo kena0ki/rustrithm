@@ -191,10 +191,10 @@ impl Dinic {
             .collect()
     }
 
-    pub fn debug_print(&self, residual: bool) {
+    pub fn debug_print(&self, out: &mut impl ::std::io::Write, residual: bool) {
         let step = if residual { 1 } else { 2 };
         for e in self.edges.iter().step_by(step) {
-            println!("{:?}", e);
+            writeln!(out, "{:?}", e).ok();
         }
     }
 }
@@ -213,7 +213,6 @@ mod test {
         graph.add_edge(3, 4, 2);
 
         let max = graph.dinic(0, 4);
-        graph.debug_print(false);
         assert_eq!(max, 3);
     }
 
