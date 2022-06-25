@@ -1,10 +1,8 @@
 //! Maximum flows, matchings, and minimum cuts.
-use std::iter::StepBy;
-
 use super::{Graph, AdjTo,FlowEdge};
 
 impl Graph<FlowEdge> {
-    pub fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, rcap: i64, cost: i64) {
+    pub fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, rcap: i64, cost: i64) -> (usize,usize){
         let edge_id = self.num_e();
         // add an edge
         self.adj.entry(u).or_default().insert(AdjTo{ edge_id, v });
@@ -12,6 +10,7 @@ impl Graph<FlowEdge> {
         // add a residual edge
         self.adj.entry(v).or_default().insert(AdjTo{ edge_id: edge_id+1, v:u });
         self.edges.push(FlowEdge { v:u, u:v, cap:rcap, cost: -cost, flow:0 });
+        return (edge_id,edge_id+1);
     }
 }
 
@@ -34,29 +33,31 @@ impl FlowGraph {
         }
     }
 
-    /// Adds an edge with specified directional capacities and cost per unit of
+    /// Adds an edge with rcap == 0.
+    pub fn add_edge(&mut self, u: usize, v: usize, cap: i64, cost:i64) -> (usize,usize) {
+       return self.add_edge_rcap(u,v,cap,0,cost);
+    }
+
+    /// Adds an edge with specified directional capacities per unit of
     /// flow. If only forward flow is allowed, rcap should be zero.
-    pub fn add_edge(&mut self, u: usize, v: usize, cap: i64, cost: i64) {
-        self.graph.add_flow_edge(u,v,cap,0,cost);
+    /// Returns the IDs of the added edge and residual edge.
+    pub fn add_edge_rcap(&mut self, u: usize, v: usize, cap: i64, rcap: i64, cost:i64) -> (usize,usize) {
+        return self.graph.add_flow_edge(u,v,cap,rcap,cost);
     }
 
-    pub fn add_edge_rcap(&mut self, u: usize, v: usize, cap: i64, rcap: i64, cost:i64) {
-        self.graph.add_flow_edge(u,v,cap,rcap,cost);
+    /// Gets an edge by the edge id.
+    pub fn get_edge(&self, i: usize) -> &FlowEdge{
+        return &self.graph.edges[i];
     }
 
-    /// Iterator of the edges not including residual edges.
-    pub fn edge_iter(&self) -> StepBy<std::slice::Iter<FlowEdge>>{
-        return self.graph.edges.iter().step_by(2);
-    }
-
-    /// Get an nth edge. The specified index corresponds to the order of adding edges.
-    pub fn get_edge(&self, n: usize) -> &FlowEdge{
-        return &self.graph.edges[n*2];
-    }
-
-    /// Underlying edges in the graph including residual edges.
-    pub fn edges_including_residual_edges(&self) -> &[FlowEdge]{
+    /// Gets edges in the graph including residual edges.
+    pub fn edges(&self) -> &[FlowEdge]{
         return &*self.graph.edges;
+    }
+
+    /// Gets iterator of edges in the graph excluding residual edges.
+    pub fn non_residual_edges_iter(&self) -> std::iter::StepBy<std::slice::Iter<FlowEdge>> {
+        return self.graph.edges.iter().step_by(2);
     }
 
     /// clear flow value once they are calculated.
@@ -239,7 +240,7 @@ mod test {
             let sum = ni64 * ki64 * big - min_cost;
             return unsafe {
                 let mut result = vec![String::from_utf8_unchecked(vec![b'.';n]);n];
-                for e in graph.edge_iter() {
+                for e in graph.non_residual_edges_iter() {
                     if e.u == s || e.v == t || e.flow == 0 {
                         continue;
                     }
