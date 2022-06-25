@@ -1,5 +1,4 @@
 //! Maximum flows, matchings, and minimum cuts.
-use std::iter::StepBy;
 
 #[derive(Debug,Default,Copy,Clone,PartialEq,Eq)]
 pub struct FlowEdge {
@@ -11,9 +10,9 @@ pub struct FlowEdge {
 
 /// Implementation of Dinic's algorithm
 pub struct Dinic {
-    adj: Vec<Vec<(usize,usize)>>, // two edges for an undirected edge
+    adj: Vec<Vec<(usize,usize)>>,
     num_vert: usize,
-    edges: Vec<FlowEdge>, // one edge for an undirected edge
+    edges: Vec<FlowEdge>,
     distance: Vec<i64>,
 }
 
@@ -41,42 +40,40 @@ impl Dinic {
         return self.edges.len();
     }
 
-    fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, rcap: i64) {
-        let e = self.num_e();
+    fn add_flow_edge(&mut self, u: usize, v: usize, cap: i64, rcap: i64) -> (usize,usize) {
+        let edge_id = self.num_e();
         // add an edge
-        self.adj[u].push((e,v));
+        self.adj[u].push((edge_id,v));
         self.edges.push(FlowEdge { u, v, cap, flow:0 });
         // add a residual edge
-        self.adj[v].push((e+1,u));
+        self.adj[v].push((edge_id+1,u));
         self.edges.push(FlowEdge { v:u, u:v, cap:rcap, flow:0 });
+        return (edge_id,edge_id+1);
+    }
+
+    /// Adds an edge with rcap == 0.
+    pub fn add_edge(&mut self, u: usize, v: usize, cap: i64) -> (usize,usize) {
+       return self.add_edge_rcap(u,v,cap,0);
     }
 
     /// Adds an edge with specified directional capacities per unit of
     /// flow. If only forward flow is allowed, rcap should be zero.
-    pub fn add_edge(&mut self, u: usize, v: usize, cap: i64) {
-        self.add_flow_edge(u,v,cap,0);
+    /// Returns the IDs of the added edge and residual edge.
+    pub fn add_edge_rcap(&mut self, u: usize, v: usize, cap: i64, rcap: i64) -> (usize,usize) {
+        return self.add_flow_edge(u,v,cap,rcap);
     }
 
-    pub fn add_edge_rcap(&mut self, u: usize, v: usize, cap: i64, rcap: i64, ) {
-        self.add_flow_edge(u,v,cap,rcap);
+    /// Gets an edge by the edge id.
+    pub fn get_edge(&self, i: usize) -> &FlowEdge{
+        return &self.edges[i];
     }
 
-    /// Iterator of the edges not including residual edges.
-    pub fn edge_iter(&self) -> StepBy<std::slice::Iter<FlowEdge>>{
-        return self.edges.iter().step_by(2);
-    }
-
-    /// Get an nth edge. The index corresponds to the order of added edges.
-    pub fn get_edge(&self, n: usize) -> &FlowEdge{
-        return &self.edges[n*2];
-    }
-
-    /// Underlying edges in the graph including residual edges.
-    pub fn edges_including_residual_edges(&self) -> &[FlowEdge]{
+    /// Gets edges in the graph including residual edges.
+    pub fn edges(&self) -> &[FlowEdge]{
         return &*self.edges;
     }
 
-    /// Clear flow values have been calculated.
+    /// Clears flow values that have been calculated before.
     pub fn clear_flow(&mut self) {
         for e in self.edges.iter_mut() {
             e.flow = 0;
@@ -164,10 +161,11 @@ impl Dinic {
         flow_used
     }
 
+    /// Returns whether edges are minimum cut or not.
     /// After running maximum flow, use this to recover the dual minimum cut.
-    pub fn min_cut(&self) -> Vec<usize> {
+    pub fn min_cut(&self) -> Vec<bool> {
         (0..self.num_e())
-            .filter(|&e| { // filter blocked edges
+            .map(|e| {
                 let edge = &self.edges[e];
                 self.distance[edge.u] < Self::INF && self.distance[edge.v] == Self::INF
             })
@@ -210,7 +208,7 @@ mod test {
         let max = graph.dinic(0, 2);
         println!("max: {:?}", max);
         assert_eq!(max, 3);
-        assert_eq!(&[2], &*graph.min_cut());
+        assert_eq!(&[false,false,true,false], &*graph.min_cut());
     }
 
     #[test]
@@ -246,7 +244,7 @@ mod test {
         let flow_amt = graph.dinic(source, sink);
         assert_eq!(flow_amt, 5);
 
-        let mut matched_edges = graph.edge_iter()
+        let mut matched_edges = graph.edges().iter()
             .filter(|&e| e.flow>0 && e.u != source && e.v != sink);
         assert_eq!(FlowEdge { u: 1, v: 8, cap: 1, flow: 1 },  *matched_edges.next().unwrap());
         assert_eq!(FlowEdge { u: 3, v: 7, cap: 1, flow: 1 },  *matched_edges.next().unwrap());

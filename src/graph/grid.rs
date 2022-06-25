@@ -117,7 +117,7 @@ impl Grid<Dinic> {
         }
     }
     pub fn debug_print(&self) {
-        for edge in self.graph.edges_including_residual_edges() {
+        for edge in self.graph.edges().iter() {
             println!("{:?}: {:?} -> {:?}", edge, self.node_to_coord(edge.u), self.node_to_coord(edge.v));
         }
     }
@@ -245,7 +245,7 @@ mod test {
 
         let max_flow = grid.graph.dinic(source, sink);
 
-        for e in grid.graph.edge_iter() {
+        for e in grid.graph.edges().iter().step_by(2) {
             if e.u == source || e.v == sink {
                 continue;
             }

@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-
 /// Represents a union of disjoint sets. Each set's elements are arranged in a
 /// tree, whose root is the set's representative.
 #[derive(Debug,Default,Clone)]
 pub struct DisjointSets {
     parent: Vec<usize>,
-    num_nodes: HashMap<usize,usize>,
+    size_nodes: Vec<usize>,
+    num_sets: usize,
 }
 
 impl DisjointSets {
@@ -13,46 +12,57 @@ impl DisjointSets {
     pub fn new(size: usize) -> Self {
         Self {
             parent: (0..size).collect(),
-            num_nodes: HashMap::<_,_>::with_capacity(size),
+            size_nodes: vec![1;size],
+            num_sets: size,
         }
     }
 
     /// Finds the set's representative. Do path compression along the way to make
     /// future queries faster.
     pub fn find(&mut self, u: usize) -> usize {
-        let pu = self.parent[u];
-        if pu != u {
-            self.parent[u] = self.find(pu);
+        let su = self.size_nodes[u];
+        if su>0 {
+            return u;
         }
-        self.parent[u]
+        self.parent[u] = self.find(self.parent[u]);
+        return self.parent[u];
     }
 
     /// Merges the sets containing u and v into a single set containing their
     /// union. Returns true if u and v were previously in different sets.
     pub fn merge(&mut self, u: usize, v: usize) -> bool {
-        let (pu, cu) = self.find_and_count(u);
-        let (pv, cv) = self.find_and_count(v);
-        let diff = pu != pv;
-        if diff {
-            self.num_nodes.remove(&pu);
-            self.num_nodes.insert(pv, cv+cu);
+        let mut pu = self.find(u);
+        let mut pv = self.find(v);
+        if pu == pv {
+            return false;
         }
-        self.parent[pu] = pv;
-        diff
-    }
-
-    /// Returns the set's representative with the number of nodes in the set.
-    pub fn find_and_count(&mut self, v:usize) -> (usize, usize) {
-        let p = self.find(v);
-        if let Some(&num) = self.num_nodes.get(&p) {
-            return (p, num);
+        let su = self.size_nodes[pu];
+        let sv = self.size_nodes[pv];
+        if su<sv {
+            std::mem::swap(&mut pu,&mut pv);
         }
-        return (v, 1);
+        self.size_nodes[pu] += self.size_nodes[pv];
+        self.size_nodes[pv] = 0;
+        self.num_sets-=1;
+        self.parent[pv] = pu;
+        return true;
     }
-
     /// Returns the number of nodes in the set.
     pub fn count(&mut self, v:usize) -> usize {
-        return self.find_and_count(v).1;
+        let p = self.find(v);
+        return self.size_nodes[p];
+    }
+    /// Returns the number of sets in the graph.
+    pub fn count_sets(&mut self) -> usize {
+        return self.num_sets;
+    }
+    /// Tests if two vertices are in the same set.
+    pub fn same(&mut self, u:usize, v:usize) -> bool {
+        return self.find(u)==self.find(v);
+    }
+    /// Tests if the vertex is a representative node.
+    pub fn leader(&mut self, v:usize) -> bool {
+        return self.size_nodes[v]>0;
     }
 }
 
