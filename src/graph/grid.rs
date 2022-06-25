@@ -245,7 +245,7 @@ mod test {
 
         let max_flow = grid.graph.dinic(source, sink);
 
-        for e in grid.graph.edges().iter().step_by(2) {
+        for e in grid.graph.non_residual_edges_iter() {
             if e.u == source || e.v == sink {
                 continue;
             }

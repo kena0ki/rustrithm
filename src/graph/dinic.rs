@@ -73,6 +73,11 @@ impl Dinic {
         return &*self.edges;
     }
 
+    /// Gets iterator of edges in the graph excluding residual edges.
+    pub fn non_residual_edges_iter(&self) -> std::iter::StepBy<std::slice::Iter<FlowEdge>> {
+        return self.edges.iter().step_by(2);
+    }
+
     /// Clears flow values that have been calculated before.
     pub fn clear_flow(&mut self) {
         for e in self.edges.iter_mut() {
