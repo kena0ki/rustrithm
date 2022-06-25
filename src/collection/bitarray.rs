@@ -50,13 +50,13 @@ impl BitArray {
 
     /// Sets the specified bit to true. Index is zero-based.
     pub fn set(&mut self, at: usize) {
-        self.panic_if_out_of_range(at);
+        self.panic_if_out_of_range(at+1);
         self.bits[at/Self::BITS_PER_UNIT] |= 1<<(at%Self::BITS_PER_UNIT);
     }
 
     /// Unsets the specified bit to false. Index is zero-based.
     pub fn unset(&mut self, at: usize) {
-        self.panic_if_out_of_range(at);
+        self.panic_if_out_of_range(at+1);
         self.bits[at/Self::BITS_PER_UNIT] ^= 1<<(at%Self::BITS_PER_UNIT);
     }
 
@@ -78,7 +78,7 @@ impl BitArray {
 
     /// Test whether the specified bit is true.
     pub fn test(&self, at: usize) -> bool {
-        self.panic_if_out_of_range(at);
+        self.panic_if_out_of_range(at+1);
         return self.bits[at/Self::BITS_PER_UNIT] & (1<<(at%Self::BITS_PER_UNIT)) > 0;
     }
 
