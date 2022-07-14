@@ -12,7 +12,7 @@ impl Prime {
     pub fn new(n:usize) -> Self{
         let mut sieve = vec![0;n+1];  // i=0,1 elements are not used.
         let mut primes = Vec::new();
-        for i in 2..n {
+        for i in 2..n+1 {
             if sieve[i] > 0 {
                 continue;
             }
@@ -95,6 +95,9 @@ mod test {
         assert_eq!(false, prm.is_prime(20));
         assert_eq!(true, prm.is_prime(397));
         assert_eq!(false, prm.is_prime(400));
+
+        let prm = Prime::new(3);
+        assert_eq!(vec![2,3], prm.primes);
     }
 }
 
