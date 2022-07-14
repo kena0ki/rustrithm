@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub struct Prime {
     n: usize,
@@ -72,6 +72,20 @@ impl Prime {
             }
         }
         return true;
+    }
+    pub fn divisors(&self, x:usize) -> Vec<usize> {
+        let mut sd = BTreeSet::<usize>::new();
+        sd.insert(1);
+        let fa = self.factorize(x);
+        for (k,v) in fa {
+            for _ in 0..v {
+                let vd = sd.iter().copied().collect::<Vec<usize>>();
+                for &d in &vd {
+                    sd.insert(d*k);
+                }
+            }
+        }
+        return sd.into_iter().collect::<Vec<_>>()
     }
 }
 
