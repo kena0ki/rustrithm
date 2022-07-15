@@ -10,8 +10,8 @@ impl Divisor {
     pub fn new(n:usize) -> Self{
         let mut divisors = vec![Vec::new();n+1];
         for i in 1..n+1 {
-            for j in (i..n+1).step_by(i) {
-                divisors[j].push(i);
+            for j in 1..n/i+1 {
+                divisors[j*i].push(i);
             }
         }
         return Self {n, divisors};
