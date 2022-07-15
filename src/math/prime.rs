@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+#[derive(Debug,Clone)]
 pub struct Prime {
     n: usize,
     sieve: Vec<usize>,
