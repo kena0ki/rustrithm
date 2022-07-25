@@ -3,47 +3,38 @@ use std::{cmp::Ordering, ops::{Add, Sub, Mul, Div}};
 
 #[derive(Debug,Default,Clone,Copy)]
 pub struct Vector {
-    pub x:f64,
-    pub y:f64,
+    pub x:i64,
+    pub y:i64,
 }
 
 impl Vector {
-    pub fn new(x: f64, y:f64) -> Self {
+    pub fn new(x: i64, y:i64) -> Self {
         Self { x, y }
     }
-    pub fn dot(&self, rhs: Self) -> f64 {
+    pub fn dot(&self, rhs: Self) -> i64 {
         return (self.x * rhs.x) + (self.y * rhs.y);
     }
-    pub fn cross(&self, rhs: Self) -> f64 {
+    pub fn cross(&self, rhs: Self) -> i64 {
         return (self.x * rhs.y) - (self.y * rhs.x);
     }
-    pub fn norm2(&self) -> f64 {
+    pub fn norm2(&self) -> i64 {
         return self.x*self.x + self.y*self.y;
     }
-    pub fn norm(&self) -> f64 {
-        return ((self.x*self.x + self.y*self.y) as f64).sqrt();
-    }
-    pub fn orth(&self,eps:f64) -> i64 {
-        if self.x.abs() < eps && self.y.abs() < eps { return 0 }
-        else if self.x > 0f64 && self.y>=0f64 { return 1 }
-        else if self.x <= 0f64 && self.y>0f64 { return 2 }
-        else if self.x < 0f64 && self.y<=0f64 { return 3 }
+    pub fn orth(&self) -> i64 {
+        if self.x.abs() == 0 && self.y.abs() == 0 { return 0 }
+        else if self.x > 0 && self.y>=0 { return 1 }
+        else if self.x <= 0 && self.y>0 { return 2 }
+        else if self.x < 0 && self.y<=0 { return 3 }
         else { return 4 }
     }
-    pub fn cmp_angle(&self, rhs: &Self, eps:f64) -> Ordering {
-        if rhs.x.is_nan() || rhs.y.is_nan() {
-            panic!("x and y shouldn't be NaN");
-        }
-        return self.partial_cmp_angle(rhs,eps).unwrap();
-    }
-    pub fn partial_cmp_angle(&self, rhs: &Self, eps:f64) -> Option<Ordering> {
-        let o1 = self.orth(eps);
-        let o2 = rhs.orth(eps);
+    pub fn cmp_angle(&self, rhs: &Self) -> Ordering {
+        let o1 = self.orth();
+        let o2 = rhs.orth();
         if o1 != o2 {
-            return Some(o1.cmp(&o2));
+            return o1.cmp(&o2);
         }
         let c = self.cross(*rhs);
-        return 0f64.partial_cmp(&c);
+        return 0i64.cmp(&c);
     }
     /// Adds the angle and multiplies the length using another vector
     /// as if it is a complex number in complex plane.
@@ -67,15 +58,15 @@ impl Sub for Vector {
     }
 }
 
-impl Mul<f64> for Vector {
+impl Mul<i64> for Vector {
     type Output=Self;
-    fn mul(self, rhs: f64) -> Self {
+    fn mul(self, rhs: i64) -> Self {
         Self { x: self.x * rhs, y: self.y * rhs }
     }
 }
-impl Div<f64> for Vector {
+impl Div<i64> for Vector {
     type Output=Self;
-    fn div(self, rhs: f64) -> Self {
+    fn div(self, rhs: i64) -> Self {
         Self { x: self.x / rhs, y: self.y / rhs }
     }
 }
