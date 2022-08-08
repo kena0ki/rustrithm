@@ -24,25 +24,6 @@ impl BitArray {
         };
     }
 
-    /// Initializes from a u8 slice.
-    pub fn from_u8slice(bits: &[u8]) -> Self {
-        return Self::from_u8slice_with_size(bits,bits.len());
-    }
-
-    /// Initializes from a u8 slice with a size.
-    pub fn from_u8slice_with_size(bits: &[u8], size: usize) -> Self {
-        Self::panic_if_out_of_input_range(size, bits.len());
-        let mut new = Self::new(size);
-        for i in 0..new.arr_size {
-            let start = i*Self::BITS_PER_UNIT;
-            let end = bits.len().min(start+Self::BITS_PER_UNIT);
-            for j in start..end {
-                new.bits[i] |= (bits[j] as u128) << (j-start);
-            }
-        }
-        return new;
-    }
-
     /// Gets the length of bits.
     pub fn len(&self) -> usize {
         return self.num_bits;
@@ -76,10 +57,20 @@ impl BitArray {
         }
     }
 
-    /// Test whether the specified bit is true.
+    /// Tests whether the specified bit is true.
     pub fn test(&self, at: usize) -> bool {
         self.panic_if_out_of_range(at+1);
         return self.bits[at/Self::BITS_PER_UNIT] & (1<<(at%Self::BITS_PER_UNIT)) > 0;
+    }
+
+    /// Counts the number of ones.
+    pub fn count_ones(&self) -> usize {
+        return self.bits.iter().fold(0,|a,b|a+b.count_ones() as usize);
+    }
+
+    /// Counts the number of zeros.
+    pub fn count_zeros(&self) -> usize {
+        return self.bits.len() - self.bits.iter().fold(0,|a,b|a+b.count_ones() as usize);
     }
 
     fn panic_if_out_of_input_range(num_bits: usize, at:usize) {
@@ -93,6 +84,10 @@ impl BitArray {
     }
 
     /// Converts the bit array to a binary representative string.
+    /// Note: The direction of the binary string is opposite from the direction of array.
+    ///        e.g.) [true,false,true,true] -> 1101
+    ///       Therefore the result may be confusing especially when you initialized the struct from
+    ///       an array.
     pub fn to_string(&self) -> String {
         let mut s = String::with_capacity(self.num_bits);
         let b = self.bits[self.arr_size-1];
@@ -228,29 +223,6 @@ impl Shr<usize> for &BitArray {
     }
 }
 
-// Commented out since these methods consume self.
-// BitArray does not implement Copy trait,
-// so these methods consuming self are not suitable for this struct.
-//
-//impl Shl<usize> for BitArray {
-//    type Output = BitArray;
-//    fn shl(self, rhs: usize) -> Self::Output {
-//        if rhs == 0 {
-//            return self;
-//        }
-//        return (&self).shl(rhs);
-//    }
-//}
-//impl Shr<usize> for BitArray {
-//    type Output = BitArray;
-//    fn shr(self, rhs: usize) -> Self::Output {
-//        if rhs == 0 {
-//            return self;
-//        }
-//        return (&self).shr(rhs);
-//    }
-//}
-
 impl ShlAssign<usize> for BitArray {
     fn shl_assign(&mut self, rhs: usize) {
         if rhs == 0 {
@@ -270,14 +242,27 @@ impl ShrAssign<usize> for BitArray {
     }
 }
 
-impl <const N:usize> From<&[u8; N]> for BitArray {
-    fn from(bits: &[u8; N]) -> Self {
-        return Self::from_u8slice(bits);
+impl From<&[bool]> for BitArray {
+    fn from(bits: &[bool]) -> Self {
+        let mut new = Self::new(bits.len());
+        for i in 0..new.arr_size {
+            let start = i*Self::BITS_PER_UNIT;
+            let end = bits.len().min(start+Self::BITS_PER_UNIT);
+            for j in start..end {
+                new.bits[i] |= (bits[j] as u128) << (j-start);
+            }
+        }
+        return new;
     }
 }
-impl From<&[u8]> for BitArray {
-    fn from(bits: &[u8]) -> Self {
-        return Self::from_u8slice(bits);
+impl From<&Vec<bool>> for BitArray {
+    fn from(bits: &Vec<bool>) -> Self {
+        return Self::from(&bits[..]);
+    }
+}
+impl <const N:usize> From<&[bool; N]> for BitArray {
+    fn from(bits: &[bool; N]) -> Self {
+        return Self::from(&bits[..]);
     }
 }
 
@@ -368,7 +353,7 @@ mod test {
 
     #[test]
     fn barr_from_u8slice() {
-        let mut barr = BitArray::from(&[0;200]);
+        let mut barr = BitArray::from(&[false;200]);
         barr.set_bits_with_u128(!0 - (1<<2) - (1<<80), 60);
         let expected = "00000000000011111111111111111111111111111111111111111111111011111111111111111111111111111111111111111111111111111111111111111111111111111011000000000000000000000000000000000000000000000000000000000000";
         assert_eq!(expected, barr.to_string());

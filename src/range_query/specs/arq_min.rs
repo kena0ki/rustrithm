@@ -25,7 +25,7 @@ impl ArqSpec for ArqMin {
     }
     fn apply(&f: &Self::F, _a: &Self::S, _: i64) -> Self::S {
         f
-        // (f+a)*s // range update
+        // (f+a) // range update
         // f.min(*a) // update min value
     }
 }
