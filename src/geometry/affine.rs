@@ -1,16 +1,16 @@
-use crate::math::num::Matrix;
+use crate::math::num::MatrixF64;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Affine {
-    a: Matrix,
+    a: MatrixF64,
     b: Vec<f64>,
 }
 
 impl Affine {
     pub fn entity(dim: usize) -> Self {
-        return Self { a: Matrix::one(dim), b: vec![0f64;dim]};
+        return Self { a: MatrixF64::one(dim), b: vec![0f64;dim]};
     }
-    pub fn new(a: Matrix, b: Vec<f64>) -> Self {
+    pub fn new(a: MatrixF64, b: Vec<f64>) -> Self {
         if a.row_len() != a.col_len() {
             panic!("Size unmatch. a.row:{}, a.col:{}", a.row_len(), a.col_len());
         }
@@ -24,7 +24,7 @@ impl Affine {
             panic!("Size unmatch. f:{}, g:{}", self.a.row_len(), g.a.row_len());
         }
         let dim = self.b.len();
-        let mut a = Matrix::zero(dim,dim);
+        let mut a = MatrixF64::zero(dim,dim);
         for i in 0..dim { for j in 0..dim { for k in 0..dim {
             a[i][j] += g.a[i][k]*self.a[k][j];
         }}}
@@ -63,11 +63,11 @@ mod test {
         assert_eq!(v, af.transform(&v));
         let af2 = af.compose(&Affine::entity(2));
         assert_eq!(af, af2);
-        let m = Matrix::from(vec![vec![2f64,0f64],vec![0f64,1f64]]);
+        let m = MatrixF64::from(vec![vec![2f64,0f64],vec![0f64,1f64]]);
         let af3 = Affine::new(m, vec![0f64, 3f64]);
         let v3 = af3.transform(&v);
         assert_eq!(&vec![6f64, 5f64], &v3);
-        let m = Matrix::from(vec![vec![0f64,2f64],vec![1f64,1f64]]);
+        let m = MatrixF64::from(vec![vec![0f64,2f64],vec![1f64,1f64]]);
         let af4 = Affine::new(m, vec![3f64, 0f64]);
         let v4 = af4.transform(&v);
         assert_eq!(&vec![7f64, 5f64], &v4);

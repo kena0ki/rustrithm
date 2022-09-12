@@ -1,24 +1,42 @@
 
 use std::{ops::{Add, Index, IndexMut, Mul, Neg, Sub}, fmt::Debug};
 
-#[derive(Clone, PartialEq, Debug)]
-pub struct Matrix {
-    cols: usize,
-    inner: Box<[f64]>,
+pub trait Num:
+    Add<Output=Self>+Mul<Output=Self>+Neg<Output=Self>+Sub<Output=Self>
+    +Sized+Clone+Copy+Debug+PartialEq
+{
+    fn zero() -> Self;
+    fn one() -> Self;
 }
-impl Matrix {
+impl Num for f64 {
+    fn zero() -> Self { 0.0 }
+    fn one() -> Self { 1.0 }
+}
+impl Num for i64 {
+    fn zero() -> Self { 0 }
+    fn one() -> Self { 1 }
+}
+pub type MatrixF64=Matrix<f64>;
+pub type MatrixI64=Matrix<i64>;
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct Matrix<T:Num> {
+    cols: usize,
+    inner: Box<[T]>,
+}
+impl <T:Num> Matrix<T> {
     pub fn zero(rows: usize, cols: usize) -> Self {
-        let inner = vec![0.0; rows * cols].into_boxed_slice();
+        let inner = vec![T::zero(); rows * cols].into_boxed_slice();
         Self { cols, inner }
     }
     pub fn one(cols: usize) -> Self {
         let mut matrix = Self::zero(cols, cols);
         for i in 0..cols {
-            matrix[i][i] = 1.0;
+            matrix[i][i] = T::one();
         }
         matrix
     }
-    pub fn vector(vec: &[f64], as_row: bool) -> Self {
+    pub fn vector(vec: &[T], as_row: bool) -> Self {
         let cols = if as_row { vec.len() } else { 1 };
         let inner = vec.to_vec().into_boxed_slice();
         Self { cols, inner }
@@ -54,76 +72,76 @@ impl Matrix {
         unimplemented!();
     }
 }
-impl Index<usize> for Matrix {
-    type Output = [f64];
+impl <T:Num> Index<usize> for Matrix<T> {
+    type Output = [T];
     fn index(&self, row: usize) -> &Self::Output {
         let start = self.cols * row;
         &self.inner[start..start + self.cols]
     }
 }
-impl IndexMut<usize> for Matrix {
+impl <T:Num> IndexMut<usize> for Matrix<T> {
     fn index_mut(&mut self, row: usize) -> &mut Self::Output {
         let start = self.cols * row;
         &mut self.inner[start..start + self.cols]
     }
 }
-impl Neg for &Matrix {
-    type Output = Matrix;
-    fn neg(self) -> Matrix {
+impl <T:Num> Neg for &Matrix<T> {
+    type Output = Matrix<T>;
+    fn neg(self) -> Self::Output {
         let inner = self.inner.iter().map(|&v| -v).collect();
-        Matrix {
+        Self::Output {
             cols: self.cols,
             inner,
         }
     }
 }
-impl Add for &Matrix {
-    type Output = Matrix;
-    fn add(self, other: Self) -> Matrix {
+impl <T:Num> Add for &Matrix<T> {
+    type Output = Matrix<T>;
+    fn add(self, other: Self) -> Self::Output {
         let self_iter = self.inner.iter();
         let inner = self_iter
             .zip(other.inner.iter())
             .map(|(&u, &v)| u + v)
             .collect();
-        Matrix {
+        Self::Output {
             cols: self.cols,
             inner,
         }
     }
 }
-impl Sub for &Matrix {
-    type Output = Matrix;
-    fn sub(self, other: Self) -> Matrix {
+impl <T:Num> Sub for &Matrix<T> {
+    type Output = Matrix<T>;
+    fn sub(self, other: Self) -> Self::Output {
         let self_iter = self.inner.iter();
         let inner = self_iter
             .zip(other.inner.iter())
             .map(|(&u, &v)| u - v)
             .collect();
-        Matrix {
+        Self::Output {
             cols: self.cols,
             inner,
         }
     }
 }
-impl Mul<f64> for &Matrix {
-    type Output = Matrix;
-    fn mul(self, scalar: f64) -> Matrix {
+impl <T:Num> Mul<T> for &Matrix<T>  {
+    type Output = Matrix<T>;
+    fn mul(self, scalar: T) -> Self::Output {
         let inner = self.inner.iter().map(|&v| v * scalar).collect();
-        Matrix {
+        Self::Output {
             cols: self.cols,
             inner,
         }
     }
 }
-impl Mul for &Matrix {
-    type Output = Matrix;
-    fn mul(self, other: Self) -> Matrix {
+impl <T:Num> Mul for &Matrix<T>  {
+    type Output = Matrix<T>;
+    fn mul(self, other: Self) -> Self::Output {
         assert_eq!(self.cols, other.row_len());
-        let mut matrix = Matrix::zero(self.row_len(), other.cols);
+        let mut matrix = Self::Output::zero(self.row_len(), other.cols);
         for i in 0..self.row_len() {
             for k in 0..self.cols {
                 for j in 0..other.cols {
-                    matrix[i][j] += self[i][k] * other[k][j];
+                    matrix[i][j] = matrix[i][j] + (self[i][k] * other[k][j]);
                 }
             }
         }
@@ -131,8 +149,8 @@ impl Mul for &Matrix {
     }
 }
 
-impl From<Vec<Vec<f64>>> for Matrix {
-    fn from(v: Vec<Vec<f64>>) -> Self {
+impl <T:Num> From<Vec<Vec<T>>> for Matrix<T> {
+    fn from(v: Vec<Vec<T>>) -> Self {
         let row = v.len();
         let col = v[0].len();
         let mut m = Matrix::zero(v.len(), v[0].len());
